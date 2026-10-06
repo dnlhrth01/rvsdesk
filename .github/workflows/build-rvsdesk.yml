@@ -44,19 +44,26 @@ jobs:
         run: |
           flutter config --enable-windows-desktop
 
-      - name: Clone RustDesk Engine Baseline
+      - name: Clone RustDesk Engine Baseline with Submodules
         run: |
-          git clone --depth 1 https://github.com/rustdesk/rustdesk.git engine
+          git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/rustdesk/rustdesk.git engine
+
+      - name: Setup vcpkg and Dependencies
+        shell: powershell
+        run: |
+          $vcpkgRoot = $env:VCPKG_INSTALLATION_ROOT
+          echo "VCPKG_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
+          cd $vcpkgRoot
+          .\vcpkg.exe install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
 
       - name: Apply RVSDesk Branding, Logo & Strip UAC Warning
         run: |
           python scripts/apply_branding.py engine
 
-      - name: Cache vcpkg & Cargo Dependencies
+      - name: Cache Cargo Dependencies
         uses: actions/cache@v4
         with:
           path: |
-            engine/vcpkg
             ~/.cargo/registry
             ~/.cargo/git
           key: ${{ runner.os }}-build-${{ hashFiles('engine/Cargo.lock') }}
