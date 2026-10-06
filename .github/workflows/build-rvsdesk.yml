@@ -33,37 +33,58 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
+      - name: Setup Flutter Toolchain
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Enable Flutter Windows Desktop
+        run: |
+          flutter config --enable-windows-desktop
+
       - name: Clone RustDesk Engine Baseline
         run: |
           git clone --depth 1 https://github.com/rustdesk/rustdesk.git engine
 
-      - name: Apply RVSDesk Branding & Zero-Cost Network Config
+      - name: Apply RVSDesk Branding, Logo & Strip UAC Warning
         run: |
           python scripts/apply_branding.py engine
 
-      - name: Cache vcpkg Dependencies
+      - name: Cache vcpkg & Cargo Dependencies
         uses: actions/cache@v4
         with:
-          path: engine/vcpkg
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('engine/Cargo.lock') }}
+          path: |
+            engine/vcpkg
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-build-${{ hashFiles('engine/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-
+            ${{ runner.os }}-build-
 
-      - name: Build RVSDesk Single Executable
+      - name: Build RVSDesk Portable Single Executable
         shell: powershell
         run: |
           cd engine
-          # Build core release binary
-          cargo build --release
-          
-          # Cari executable yang telah siap dikompilasi
-          $exe = Get-ChildItem -Path target/release -Filter "*.exe" | Where-Object { $_.Name -notlike "*build*" -and $_.Name -notlike "*.d" } | Select-Object -First 1
-          if ($exe) {
-            Copy-Item $exe.FullName -Destination "..\RVSDesk-Portable.exe"
-            Write-Host "Successfully generated RVSDesk-Portable.exe"
+          # Jalankan skrip pembina rasmi untuk menjana portable executable berasingan
+          if (Test-Path "build.py") {
+            python build.py --portable --flutter --hwcodec
           } else {
-            Write-Warning "Binary found in alternate directory, locating..."
-            Get-ChildItem -Path target -Filter "*.exe" -Recurse | Select-Object FullName
+            cargo build --release
+          }
+          
+          # Cari executable yang telah siap dipaketkan
+          $exe = Get-ChildItem -Path . -Filter "*.exe" -Recurse | Where-Object { 
+            $_.FullName -notlike "*target\release\build*" -and 
+            $_.FullName -notlike "*\deps\*" -and 
+            $_.Length -gt 15MB 
+          } | Sort-Object Length -Descending | Select-Object -First 1
+
+          if ($exe) {
+            Copy-Item $exe.FullName -Destination "..\RVSDesk-Portable.exe" -Force
+            Write-Host "Successfully generated RVSDesk-Portable.exe ($($exe.Length) bytes)"
+          } else {
+            Write-Error "Portable binary was not found after build!"
           }
 
       - name: Digital Signature (Zero Cost Self-Signed Authenticode)

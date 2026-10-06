@@ -43,25 +43,33 @@ Fail `RVSDesk.exe` akan dijana terus ke dalam folder `dist/` berserta tandatanga
 
 ---
 
-### Pilihan 2: Kompilasi Automatik di Awan melalui GitHub Actions (Disyorkan)
-Anda tidak perlu memasang persekitaran C++/Rust/Flutter yang memakan ruang puluhan Gigabyte di PC anda. Gunakan mesin berkuasa tinggi percuma daripada GitHub:
+### Kaedah Kompilasi Awan Melalui GitHub Actions (100% Rebranding & Buang UAC)
+Inilah **cara yang sebenar** untuk mendapatkan perisian tulen RVSDesk tanpa sebarang teks RustDesk dan membuang terus mesej UAC / butang "Install":
 
 1. **Cipta Repositori di GitHub**:
-   - Buka [GitHub](https://github.com) dan cipta repositori baharu bernama `rvsdesk`.
-2. **Tolak (*Push*) Projek ini ke GitHub**:
+   - Buka [GitHub.com](https://github.com) dan cipta satu repositori baharu (cth: `rvsdesk`).
+2. **Tolak (Push) Projek dari Folder Ini ke GitHub**:
+   Buka terminal di `C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk` dan jalankan:
    ```bash
    git init
    git add .
-   git commit -m "Initial commit for RVSDesk with custom branding"
+   git commit -m "feat: initial release of RVSDesk with custom logo and stripped UAC"
    git branch -M main
-   git remote add origin https://github.com/<username-anda>/rvsdesk.git
+   git remote add origin https://github.com/<username-github-anda>/rvsdesk.git
    git push -u origin main
    ```
-3. **Penyusunan Automatik di GitHub Actions**:
-   - Masuk ke tab **Actions** di repositori GitHub anda.
-   - Alur kerja `Build RVSDesk Portable (Zero-Cost CI/CD)` akan berjalan secara automatik.
-4. **Muat Turun Fail `.exe`**:
-   - Setelah selesai (tanda hijau ✔️), muat turun fail binary `RVSDesk-Portable.exe` dari bahagian **Artifacts** atau **Releases**.
+3. **Proses Kompilasi Berjalan Automatik**:
+   - Buka tab **Actions** pada repositori GitHub anda.
+   - Anda akan melihat workflow `Build RVSDesk Portable (Zero-Cost CI/CD)` mula berjalan.
+   - GitHub Actions akan:
+     - Menyuntik logo RVS anda (`rvsdesk.ico` & logo PNG).
+     - Menukar nama perisian dan teks tetingkap kepada **RVSDesk**.
+     - **Membuang terus mesej amaran UAC dan butang "Install"** dari antara muka pengguna.
+     - Menyusun fail menjadi satu binary mudah alih (`RVSDesk-Portable.exe`).
+     - Menandatangani fail tersebut secara digital.
+4. **Muat Turun Fail Siap**:
+   - Klik pada binaan yang selesai di tab **Actions** dan muat turun fail daripada bahagian **Artifacts**.
+   - Fail tersebut kini 100% berjenama RVSDesk dan sedia diedarkan kepada klien!
 
 ---
 

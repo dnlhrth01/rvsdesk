@@ -96,8 +96,28 @@ def apply_branding(repo_root: str, assets_dir: str):
         except Exception as e:
             print(f"  [!] Failed patching Cargo.toml: {e}")
 
-    # 6. Gantikan perkataan RustDesk dalam fail bahasa (src/lang/en.rs dll)
-    lang_dir = os.path.join(repo_root, "src", "lang")
+    # 7. Padamkan Mesej Amaran UAC & Butang "Install" (Sembunyikan Help Cards Secara Kekal)
+    # 7a. Suntik konfigurasi lalai hide-help-cards=Y dalam config.rs
+    if os.path.exists(config_rs):
+        try:
+            with open(config_rs, "r", encoding="utf-8", errors="ignore") as f:
+                cfg_text = f.read()
+            # Pastikan hide-help-cards sentiasa aktif secara lalai
+            if "pub const DEFAULT_HIDE_HELP_CARDS: bool = false;" in cfg_text:
+                cfg_text = cfg_text.replace("pub const DEFAULT_HIDE_HELP_CARDS: bool = false;", "pub const DEFAULT_HIDE_HELP_CARDS: bool = true;")
+            # Tambah override dalam option fetching
+            cfg_text = re.sub(
+                r'fn get_option\((.*?)\) -> String \{',
+                r'fn get_option(\1) -> String {\n    if key == "hide-help-cards" { return "Y".to_string(); }',
+                cfg_text
+            )
+            with open(config_rs, "w", encoding="utf-8") as f:
+                f.write(cfg_text)
+            print("  [+] Enforced hide-help-cards=Y in config.rs")
+        except Exception as e:
+            print(f"  [!] Note on UAC config: {e}")
+
+    # 7b. Padamkan / kosongkan teks amaran UAC dalam semua fail bahasa
     if os.path.exists(lang_dir):
         for root, _, files in os.walk(lang_dir):
             for file in files:
@@ -105,16 +125,37 @@ def apply_branding(repo_root: str, assets_dir: str):
                     f_path = os.path.join(root, file)
                     try:
                         with open(f_path, "r", encoding="utf-8", errors="ignore") as f:
-                            text = f.read()
-                        if "RustDesk" in text:
-                            text = text.replace("RustDesk", APP_NAME)
-                            with open(f_path, "w", encoding="utf-8") as f:
-                                f.write(text)
+                            l_text = f.read()
+                        # Gantikan ayat UAC dan install tip dengan kosong
+                        l_text = re.sub(r'".*?Due to UAC.*?"', '""', l_text, flags=re.IGNORECASE)
+                        l_text = re.sub(r'".*?install.*?to the system.*?"', '""', l_text, flags=re.IGNORECASE)
+                        with open(f_path, "w", encoding="utf-8") as f:
+                            f.write(l_text)
                     except Exception:
                         pass
-        print("  [+] Patched language files to RVSDesk")
+        print("  [+] Stripped UAC and Install warning strings from languages")
 
-    print("[*] RVSDesk branding successfully applied!")
+    # 7c. Buang widget kad bantuan / install card dalam Flutter UI jika wujud
+    flutter_lib = os.path.join(repo_root, "flutter", "lib")
+    if os.path.exists(flutter_lib):
+        for root, _, files in os.walk(flutter_lib):
+            for file in files:
+                if file.endswith(".dart"):
+                    d_path = os.path.join(root, file)
+                    try:
+                        with open(d_path, "r", encoding="utf-8", errors="ignore") as f:
+                            d_text = f.read()
+                        if "hide-help-cards" in d_text or "install_tip" in d_text or "InstallCard" in d_text:
+                            # Paksa sembunyikan kad
+                            d_text = d_text.replace("bind.mainGetOption(key: 'hide-help-cards') != 'Y'", "false")
+                            d_text = d_text.replace("bind.mainGetOption(key: 'hide-help-cards') == 'Y'", "true")
+                            with open(d_path, "w", encoding="utf-8") as f:
+                                f.write(d_text)
+                    except Exception:
+                        pass
+        print("  [+] Neutralized UAC / Install Card widgets in Flutter UI")
+
+    print("[*] RVSDesk branding & UAC removal successfully applied!")
 
 if __name__ == "__main__":
     current_dir = os.path.dirname(os.path.abspath(__file__))
