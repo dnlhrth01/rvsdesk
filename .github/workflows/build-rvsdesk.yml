@@ -18,12 +18,12 @@ jobs:
       - name: Checkout RVSDesk Repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python Environment
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install LLVM and Clang
+      - name: Install LLVM and Clang (15.0.2 For Rust-Bindgen)
         run: |
           choco install llvm -y --version 15.0.2 --allow-downgrade --force
           echo "LIBCLANG_PATH=C:\Program Files\LLVM\bin" >> $env:GITHUB_ENV
@@ -48,6 +48,14 @@ jobs:
         run: |
           git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/rustdesk/rustdesk.git engine
 
+      - name: Cache vcpkg Installed Packages
+        uses: actions/cache@v4
+        with:
+          path: C:\vcpkg\installed
+          key: ${{ runner.os }}-vcpkg-installed-${{ hashFiles('engine/vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-installed-
+
       - name: Setup vcpkg and Dependencies
         shell: powershell
         run: |
@@ -55,6 +63,13 @@ jobs:
           echo "VCPKG_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
           cd $vcpkgRoot
           .\vcpkg.exe install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
+
+      - name: Install Portable Packaging Python Requirements
+        shell: powershell
+        run: |
+          if (Test-Path "engine\libs\portable\requirements.txt") {
+            pip install -r engine\libs\portable\requirements.txt
+          }
 
       - name: Apply RVSDesk Branding, Logo & Strip UAC Warning
         run: |
@@ -66,22 +81,22 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ runner.os }}-build-${{ hashFiles('engine/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('engine/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-build-
+            ${{ runner.os }}-cargo-build-
 
       - name: Build RVSDesk Portable Single Executable
         shell: powershell
         run: |
           cd engine
-          # Jalankan skrip pembina rasmi untuk menjana portable executable berasingan
+          # Jalankan skrip pembina rasmi untuk menjana portable executable
           if (Test-Path "build.py") {
             python build.py --portable --flutter --hwcodec
           } else {
             cargo build --release
           }
           
-          # Cari executable yang telah siap dipaketkan
+          # Cari executable portable yang telah siap dipaketkan
           $exe = Get-ChildItem -Path . -Filter "*.exe" -Recurse | Where-Object { 
             $_.FullName -notlike "*target\release\build*" -and 
             $_.FullName -notlike "*\deps\*" -and 
@@ -107,7 +122,7 @@ jobs:
         with:
           name: RVSDesk-Windows-Portable-x64
           path: RVSDesk-Portable.exe
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Create GitHub Release (If Tagged)
         if: startsWith(github.ref, 'refs/tags/')
