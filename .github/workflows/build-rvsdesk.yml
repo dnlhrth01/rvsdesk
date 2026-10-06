@@ -25,8 +25,9 @@ jobs:
 
       - name: Install LLVM and Clang
         run: |
-          choco install llvm -y --version 15.0.2
+          choco install llvm -y --version 15.0.2 --allow-downgrade --force
           echo "LIBCLANG_PATH=C:\Program Files\LLVM\bin" >> $env:GITHUB_ENV
+          echo "C:\Program Files\LLVM\bin" >> $env:GITHUB_PATH
 
       - name: Setup Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
