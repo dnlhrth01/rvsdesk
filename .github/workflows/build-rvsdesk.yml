@@ -1,0 +1,92 @@
+name: Build RVSDesk Portable (Zero-Cost CI/CD)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    name: Build RVSDesk Windows Single .exe
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout RVSDesk Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install LLVM and Clang
+        run: |
+          choco install llvm -y --version 15.0.2
+          echo "LIBCLANG_PATH=C:\Program Files\LLVM\bin" >> $env:GITHUB_ENV
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Clone RustDesk Engine Baseline
+        run: |
+          git clone --depth 1 https://github.com/rustdesk/rustdesk.git engine
+
+      - name: Apply RVSDesk Branding & Zero-Cost Network Config
+        run: |
+          python scripts/apply_branding.py engine
+
+      - name: Cache vcpkg Dependencies
+        uses: actions/cache@v4
+        with:
+          path: engine/vcpkg
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('engine/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Build RVSDesk Single Executable
+        shell: powershell
+        run: |
+          cd engine
+          # Build core release binary
+          cargo build --release
+          
+          # Cari executable yang telah siap dikompilasi
+          $exe = Get-ChildItem -Path target/release -Filter "*.exe" | Where-Object { $_.Name -notlike "*build*" -and $_.Name -notlike "*.d" } | Select-Object -First 1
+          if ($exe) {
+            Copy-Item $exe.FullName -Destination "..\RVSDesk-Portable.exe"
+            Write-Host "Successfully generated RVSDesk-Portable.exe"
+          } else {
+            Write-Warning "Binary found in alternate directory, locating..."
+            Get-ChildItem -Path target -Filter "*.exe" -Recurse | Select-Object FullName
+          }
+
+      - name: Digital Signature (Zero Cost Self-Signed Authenticode)
+        shell: powershell
+        run: |
+          if (Test-Path "RVSDesk-Portable.exe") {
+            powershell -ExecutionPolicy Bypass -File scripts/create_self_signed_cert.ps1 -TargetExe "RVSDesk-Portable.exe"
+          }
+
+      - name: Upload RVSDesk Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RVSDesk-Windows-Portable-x64
+          path: RVSDesk-Portable.exe
+          if-no-files-found: warn
+
+      - name: Create GitHub Release (If Tagged)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: RVSDesk-Portable.exe
+          name: RVSDesk ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
