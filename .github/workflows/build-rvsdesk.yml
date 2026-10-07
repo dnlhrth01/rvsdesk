@@ -150,16 +150,19 @@ jobs:
           # 1. Kompilasi enjin teras dan bina bundle Flutter (tanpa --hwcodec agar tidak memerlukan header C++ FFmpeg yang hilang)
           python build.py --portable --flutter --skip-portable-pack
           
-          # 2. Salin output build Flutter ke direktori release
+          # 2. Salin output build Flutter ke direktori release dan namakan rvsdesk.exe
           if (Test-Path "flutter/build/windows/x64/runner/Release") {
             Copy-Item -Path "flutter/build/windows/x64/runner/Release" -Destination "..\rustdesk_bundle" -Recurse -Force
+            if (Test-Path "..\rustdesk_bundle\rustdesk.exe") {
+              Move-Item -Path "..\rustdesk_bundle\rustdesk.exe" -Destination "..\rustdesk_bundle\rvsdesk.exe" -Force
+            }
           } else {
             Write-Error "Flutter Windows release bundle was not found!"
           }
           
-          # 3. Jana fail tunggal portable .exe menggunakan alat pemaket rasmi
+          # 3. Jana fail tunggal portable .exe menggunakan alat pemaket rasmi (menyasarkan rvsdesk.exe)
           cd libs/portable
-          python generate.py -f ../../../rustdesk_bundle -o . -e ../../../rustdesk_bundle/rustdesk.exe
+          python generate.py -f ../../../rustdesk_bundle -o . -e ../../../rustdesk_bundle/rvsdesk.exe
           cd ../..
           
           # 4. Cari binary tunggal mudah alih yang telah siap dipaketkan
