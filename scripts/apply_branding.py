@@ -63,10 +63,19 @@ def apply_branding(repo_root: str, assets_dir: str):
             if "pub const DEFAULT_HIDE_HELP_CARDS: bool = false;" in c_content:
                 c_content = c_content.replace("pub const DEFAULT_HIDE_HELP_CARDS: bool = false;", "pub const DEFAULT_HIDE_HELP_CARDS: bool = true;")
             
-            # Suntik pemintasan pilihan supaya sentiasa sembunyikan amaran UAC
+            # Suntik pemintasan pilihan supaya sentiasa sembunyikan amaran UAC mengikut nama parameter sebenar (k / key)
+            def patch_get_option(match):
+                signature_args = match.group(1)
+                m_param = re.search(r'([a-zA-Z0-9_]+)\s*:\s*&str', signature_args)
+                param_name = m_param.group(1) if m_param else "k"
+                return (
+                    f"fn get_option({signature_args}) -> String {{\n"
+                    f'    if {param_name} == "hide-help-cards" {{ return "Y".to_string(); }}\n'
+                )
+
             c_content = re.sub(
-                r'fn get_option\((.*?)\) -> String \{',
-                r'fn get_option(\1) -> String {\n    if key == "hide-help-cards" { return "Y".to_string(); }',
+                r'fn get_option\((.*?)\)\s*->\s*String\s*\{',
+                patch_get_option,
                 c_content
             )
             
