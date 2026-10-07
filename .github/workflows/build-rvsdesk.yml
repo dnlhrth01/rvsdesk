@@ -10,12 +10,63 @@ on:
       - 'v*'
 
 jobs:
+  # ====================================================================
+  # JOB 1: Menjana Fail FFI Bridge Antara Rust & Flutter (Linux Runner)
+  # Diperlukan secara rasmi oleh Flutter-Rust-Bridge untuk RustDesk
+  # ====================================================================
+  generate-bridge:
+    name: Generate Flutter-Rust Bridge
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Source Code with Submodules
+        uses: actions/checkout@v4
+        with:
+          repository: rustdesk/rustdesk
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.75"
+          components: "rustfmt"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: "3.24.5"
+          cache: true
+
+      - name: Install Bridge Generator & Generate Files
+        run: |
+          cargo install cargo-expand --version 1.0.95 --locked
+          cargo install flutter_rust_bridge_codegen --version 1.80.1 --features "uuid" --locked
+          pushd flutter && flutter pub get && popd
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+
+      - name: Upload Bridge Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-artifact
+          path: |
+            ./src/bridge_generated.rs
+            ./src/bridge_generated.io.rs
+            ./flutter/lib/generated_bridge.dart
+            ./flutter/lib/generated_bridge.freezed.dart
+            ./flutter/macos/Runner/bridge_generated.h
+
+  # ====================================================================
+  # JOB 2: Kompilasi Windows Single Portable .exe (RVSDesk)
+  # ====================================================================
   build-windows:
     name: Build RVSDesk Windows Single .exe
+    needs: [generate-bridge]
     runs-on: windows-2022
 
     steps:
-      - name: Checkout RVSDesk Repository
+      - name: Checkout RVSDesk Configuration & Branding Repo
         uses: actions/checkout@v4
 
       - name: Setup Python Environment
@@ -32,21 +83,30 @@ jobs:
       - name: Setup Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: "1.75"
           targets: x86_64-pc-windows-msvc
+          components: "rustfmt"
 
       - name: Setup Flutter Toolchain
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: "stable"
+          flutter-version: "3.24.5"
           cache: true
 
       - name: Enable Flutter Windows Desktop
         run: |
           flutter config --enable-windows-desktop
 
-      - name: Clone RustDesk Engine Baseline with Submodules
+      - name: Clone RustDesk Engine with Submodules
         run: |
           git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/rustdesk/rustdesk.git engine
+
+      - name: Restore Generated Bridge Files
+        uses: actions/download-artifact@v4
+        with:
+          name: bridge-artifact
+          path: engine
 
       - name: Cache vcpkg Installed Packages
         uses: actions/cache@v4
@@ -64,12 +124,10 @@ jobs:
           cd $vcpkgRoot
           .\vcpkg.exe install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
 
-      - name: Install Portable Packaging Python Requirements
+      - name: Install Python Portable Packer Dependencies
         shell: powershell
         run: |
-          if (Test-Path "engine\libs\portable\requirements.txt") {
-            pip install -r engine\libs\portable\requirements.txt
-          }
+          pip install -r engine/libs/portable/requirements.txt
 
       - name: Apply RVSDesk Branding, Logo & Strip UAC Warning
         run: |
@@ -85,29 +143,35 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-build-
 
-      - name: Build RVSDesk Portable Single Executable
+      - name: Compile and Build Windows Portable Executable
         shell: powershell
         run: |
           cd engine
-          # Jalankan skrip pembina rasmi untuk menjana portable executable
-          if (Test-Path "build.py") {
-            python build.py --portable --flutter --hwcodec
+          # 1. Kompilasi enjin teras dan bina bundle Flutter
+          python build.py --portable --flutter --skip-portable-pack --hwcodec
+          
+          # 2. Salin output build Flutter ke direktori release
+          if (Test-Path "flutter/build/windows/x64/runner/Release") {
+            Copy-Item -Path "flutter/build/windows/x64/runner/Release" -Destination "..\rustdesk_bundle" -Recurse -Force
           } else {
-            cargo build --release
+            Write-Error "Flutter Windows release bundle was not found!"
           }
           
-          # Cari executable portable yang telah siap dipaketkan
-          $exe = Get-ChildItem -Path . -Filter "*.exe" -Recurse | Where-Object { 
-            $_.FullName -notlike "*target\release\build*" -and 
-            $_.FullName -notlike "*\deps\*" -and 
-            $_.Length -gt 15MB 
-          } | Sort-Object Length -Descending | Select-Object -First 1
-
-          if ($exe) {
-            Copy-Item $exe.FullName -Destination "..\RVSDesk-Portable.exe" -Force
-            Write-Host "Successfully generated RVSDesk-Portable.exe ($($exe.Length) bytes)"
+          # 3. Jana fail tunggal portable .exe menggunakan alat pemaket rasmi
+          cd libs/portable
+          python generate.py -f ../../../rustdesk_bundle -o . -e ../../../rustdesk_bundle/rustdesk.exe
+          cd ../..
+          
+          # 4. Cari binary tunggal mudah alih yang telah siap dipaketkan
+          $singleExe = Get-ChildItem -Path target/release -Filter "*portable*.exe" | Select-Object -First 1
+          if (-not $singleExe) {
+            $singleExe = Get-ChildItem -Path . -Filter "*install*.exe" -Recurse | Select-Object -First 1
+          }
+          if ($singleExe) {
+            Copy-Item $singleExe.FullName -Destination "..\RVSDesk-Portable.exe" -Force
+            Write-Host "Berjaya menjana: RVSDesk-Portable.exe ($($singleExe.Length) bytes)"
           } else {
-            Write-Error "Portable binary was not found after build!"
+            Write-Error "Single portable binary was not found!"
           }
 
       - name: Digital Signature (Zero Cost Self-Signed Authenticode)
