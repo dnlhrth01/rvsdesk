@@ -147,8 +147,8 @@ jobs:
         shell: powershell
         run: |
           cd engine
-          # 1. Kompilasi enjin teras dan bina bundle Flutter
-          python build.py --portable --flutter --skip-portable-pack --hwcodec
+          # 1. Kompilasi enjin teras dan bina bundle Flutter (tanpa --hwcodec agar tidak memerlukan header C++ FFmpeg yang hilang)
+          python build.py --portable --flutter --skip-portable-pack
           
           # 2. Salin output build Flutter ke direktori release
           if (Test-Path "flutter/build/windows/x64/runner/Release") {
