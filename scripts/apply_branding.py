@@ -5,6 +5,8 @@ Ensures:
 1. Complete elimination of all UAC & installation warning cards.
 2. Complete replacement of all logo variants (light, dark, default, and icon).
 3. Complete process & registry isolation so RVSDesk and RustDesk can run side-by-side without interference.
+4. Complete removal of "For faster connection, please set up your own server" banner.
+5. Complete removal of Settings -> Account Tab.
 """
 
 import os
@@ -27,6 +29,8 @@ def apply_branding(repo_root: str, assets_dir: str):
     runner_rc = os.path.join(repo_root, "flutter", "windows", "runner", "Runner.rc")
     main_cpp = os.path.join(repo_root, "flutter", "windows", "runner", "main.cpp")
     desktop_home_page = os.path.join(repo_root, "flutter", "lib", "desktop", "pages", "desktop_home_page.dart")
+    connection_page = os.path.join(repo_root, "flutter", "lib", "desktop", "pages", "connection_page.dart")
+    desktop_setting_page = os.path.join(repo_root, "flutter", "lib", "desktop", "pages", "desktop_setting_page.dart")
     common_dart = os.path.join(repo_root, "flutter", "lib", "common.dart")
     lang_dir = os.path.join(repo_root, "src", "lang")
 
@@ -75,7 +79,7 @@ def apply_branding(repo_root: str, assets_dir: str):
             except Exception as e:
                 print(f"  [!] Note: Could not copy icon to {dest}: {e}")
 
-    # 2. Kemas kini libs/hbb_common/src/config.rs (APP_NAME -> RVSDesk)
+    # 2. Kemas kini libs/hbb_common/src/config.rs (APP_NAME -> RVSDesk & Matikan Account/Install di peringkat Rust)
     if os.path.exists(config_rs):
         try:
             with open(config_rs, "r", encoding="utf-8", errors="ignore") as f:
@@ -86,9 +90,23 @@ def apply_branding(repo_root: str, assets_dir: str):
                 f'pub static ref APP_NAME: RwLock<String> = RwLock::new("{APP_NAME}".to_owned());'
             )
             
+            # Matikan modul akaun & modul pemasangan
+            c_content = re.sub(
+                r'pub fn is_disable_account\(\) -> bool \{.*?\}',
+                'pub fn is_disable_account() -> bool { true }',
+                c_content,
+                flags=re.DOTALL
+            )
+            c_content = re.sub(
+                r'pub fn is_disable_installation\(\) -> bool \{.*?\}',
+                'pub fn is_disable_installation() -> bool { true }',
+                c_content,
+                flags=re.DOTALL
+            )
+            
             with open(config_rs, "w", encoding="utf-8") as f:
                 f.write(c_content)
-            print("  [+] Patched APP_NAME to RVSDesk in config.rs")
+            print("  [+] Patched APP_NAME, disabled account & installation in config.rs")
         except Exception as e:
             print(f"  [!] Note on config.rs: {e}")
 
@@ -180,7 +198,43 @@ def apply_branding(repo_root: str, assets_dir: str):
         except Exception as e:
             print(f"  [!] Failed stripping UAC in desktop_home_page.dart: {e}")
 
-    # 8. Buang teks 'Powered by RustDesk' daripada Flutter (common.dart)
+    # 8. Buang 'For faster connection, please set up your own server' (connection_page.dart)
+    if os.path.exists(connection_page):
+        try:
+            with open(connection_page, "r", encoding="utf-8", errors="ignore") as f:
+                cp_text = f.read()
+            
+            cp_text = re.sub(
+                r'setupServerWidget\(\)\s*=>\s*Flexible\(.*?\n\s*\);',
+                'setupServerWidget() => const SizedBox.shrink();',
+                cp_text,
+                flags=re.DOTALL
+            )
+            
+            with open(connection_page, "w", encoding="utf-8") as f:
+                f.write(cp_text)
+            print("  [+] Stripped 'For faster connection, please set up your own server' from connection_page.dart")
+        except Exception as e:
+            print(f"  [!] Failed patching connection_page.dart: {e}")
+
+    # 9. Buang Tab 'Account' Sepenuhnya dari Tetapan (desktop_setting_page.dart)
+    if os.path.exists(desktop_setting_page):
+        try:
+            with open(desktop_setting_page, "r", encoding="utf-8", errors="ignore") as f:
+                sp_text = f.read()
+            
+            sp_text = sp_text.replace(
+                'if (!bind.isDisableAccount()) SettingsTabKey.account,',
+                'if (false) SettingsTabKey.account,'
+            )
+            
+            with open(desktop_setting_page, "w", encoding="utf-8") as f:
+                f.write(sp_text)
+            print("  [+] Stripped Settings -> Account Tab completely from desktop_setting_page.dart")
+        except Exception as e:
+            print(f"  [!] Failed patching desktop_setting_page.dart: {e}")
+
+    # 10. Buang teks 'Powered by RustDesk' daripada Flutter (common.dart)
     if os.path.exists(common_dart):
         try:
             with open(common_dart, "r", encoding="utf-8", errors="ignore") as f:
@@ -199,7 +253,7 @@ def apply_branding(repo_root: str, assets_dir: str):
         except Exception as e:
             print(f"  [!] Failed patching common.dart: {e}")
 
-    # 9. Kemas kini Kamus Bahasa (src/lang/*.rs)
+    # 11. Kemas kini Kamus Bahasa (src/lang/*.rs)
     if os.path.exists(lang_dir):
         for root, _, files in os.walk(lang_dir):
             for file in files:
