@@ -18,6 +18,8 @@ APP_NAME = "RVSDesk"
 APP_DESCRIPTION = "RVSDesk - Free & Secure Portable Remote Desktop"
 APP_VERSION = "1.5.0"
 AUTHOR = "RVS Software"
+SERVER_HOST = "console.danialharith.space"
+SERVER_PUB_KEY = "SQ3o9WEaT4kbLZiGo6EwtIktBA2K220WPkr1tnN66IU="
 
 def apply_branding(repo_root: str, assets_dir: str):
     print(f"[*] Applying RVSDesk branding to repository at: {repo_root}")
@@ -102,10 +104,23 @@ def apply_branding(repo_root: str, assets_dir: str):
                 'pub fn is_disable_installation() -> bool { true }',
                 c_content,
                 flags=re.DOTALL
+            # Kunci pelayan rasmi RVSDesk & Public Key persendirian (Bebas Login 100%)
+            c_content = c_content.replace(
+                'pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("".to_owned());',
+                f'pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("{SERVER_HOST}".to_owned());'
+            )
+            c_content = c_content.replace(
+                'pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];',
+                f'pub const RENDEZVOUS_SERVERS: &[&str] = &["{SERVER_HOST}"];'
+            )
+            c_content = c_content.replace(
+                'pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";',
+                f'pub const RS_PUB_KEY: &str = "{SERVER_PUB_KEY}";'
             )
             
             with open(config_rs, "w", encoding="utf-8") as f:
                 f.write(c_content)
+            print(f"  [+] Injected Private Server ({SERVER_HOST}) & Public Key ({SERVER_PUB_KEY[:8]}...) into config.rs")
             print("  [+] Patched APP_NAME, disabled account & installation in config.rs")
         except Exception as e:
             print(f"  [!] Note on config.rs: {e}")
