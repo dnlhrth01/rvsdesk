@@ -104,6 +104,7 @@ def apply_branding(repo_root: str, assets_dir: str):
                 'pub fn is_disable_installation() -> bool { true }',
                 c_content,
                 flags=re.DOTALL
+            )
             # Kunci pelayan rasmi RVSDesk & Public Key persendirian (Bebas Login 100%)
             c_content = c_content.replace(
                 'pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("".to_owned());',
