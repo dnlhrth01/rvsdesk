@@ -614,7 +614,7 @@ def apply_branding(repo_root: str, assets_dir: str):
         except Exception as e:
             print(f"  [!] Failed patching desktop_setting_page.dart: {e}")
 
-    # 10. Buang teks 'Powered by RustDesk' daripada Flutter (common.dart)
+    # 10. Buang teks 'Powered by RustDesk' & Terapkan Tema Warna Crimson Red (common.dart)
     if os.path.exists(common_dart):
         try:
             with open(common_dart, "r", encoding="utf-8", errors="ignore") as f:
@@ -626,10 +626,33 @@ def apply_branding(repo_root: str, assets_dir: str):
                 cd_text,
                 flags=re.DOTALL | re.MULTILINE
             )
+
+            # Terapkan Tema Warna Rasmi RVSDesk (Crimson Red / Cyber Red #DC2626)
+            cd_text = cd_text.replace(
+                "static const Color accent = Color(0xFF0071FF);",
+                "static const Color accent = Color(0xFFDC2626);"
+            )
+            cd_text = cd_text.replace(
+                "static const Color accent50 = Color(0x770071FF);",
+                "static const Color accent50 = Color(0x77DC2626);"
+            )
+            cd_text = cd_text.replace(
+                "static const Color accent80 = Color(0xAA0071FF);",
+                "static const Color accent80 = Color(0xAADC2626);"
+            )
+            cd_text = cd_text.replace(
+                "static const Color button = Color(0xFF2C8CFF);",
+                "static const Color button = Color(0xFFEF4444);"
+            )
+            cd_text = cd_text.replace(
+                "static const Color idColor = Color(0xFF00B6F0);",
+                "static const Color idColor = Color(0xFFF87171);"
+            )
             
             with open(common_dart, "w", encoding="utf-8") as f:
                 f.write(cd_text)
             print("  [+] Stripped 'Powered by RustDesk' from common.dart")
+            print("  [+] Applied RVSDesk Crimson Red Theme (#DC2626) to common.dart")
         except Exception as e:
             print(f"  [!] Failed patching common.dart: {e}")
 

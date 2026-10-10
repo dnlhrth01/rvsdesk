@@ -105,6 +105,14 @@ def run_audit():
     assert "{E7B5C821-4F12-4B29-87AE-RVS94AC9B1F9}_is1" in win_text, "FAILED: Isolated registry GUID not injected!"
     print("  [OK] windows.rs: 100% Valid (Windows Registry isolation active).")
 
+    # Audit 5: common.dart (Crimson Red Theme & Powered-by stripped)
+    cd_path = os.path.join(temp_engine, "flutter", "lib", "common.dart")
+    with open(cd_path, "r", encoding="utf-8") as f:
+        cd_text = f.read()
+    assert "Color(0xFFDC2626)" in cd_text, "FAILED: Crimson Red accent not injected into common.dart!"
+    assert "Color(0xFFEF4444)" in cd_text, "FAILED: Crimson Red button not injected into common.dart!"
+    print("  [OK] common.dart: 100% Valid (Crimson Red Theme #DC2626 active).")
+
     print("\n[4/4] Executing Dart syntax & formatting checks...")
     # If dart CLI installed, test 'dart format --dry-run' on connection_page.dart
     dart_exe = shutil.which("dart") or r"C:\flutter\bin\dart.bat"

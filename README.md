@@ -27,6 +27,8 @@
    - Portable elevation support to interact with Windows UAC / Administrator prompts.
 5. **Zero-Cost Code Signing**:
    - Equipped with self-signed Authenticode automation and Microsoft Security Intelligence whitelisting guidance.
+6. **Custom Brand Aesthetic (Crimson Red `#DC2626`)**:
+   - Modern cybersecurity aesthetic with custom crimson red buttons, highlights, and status indicators.
 
 ---
 
