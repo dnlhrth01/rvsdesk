@@ -550,9 +550,9 @@ def apply_branding(repo_root: str, assets_dir: str):
                               color: Colors.green.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: [
+                              children: const [
                                 Icon(Icons.verified_rounded, size: 14, color: Colors.green),
                                 SizedBox(width: 4),
                                 Text("Juruteknik Disahkan", style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold)),
@@ -584,15 +584,25 @@ def apply_branding(repo_root: str, assets_dir: str):
     );
   }"""
 
-            if old_build_block in cp_text:
-                cp_text = cp_text.replace(old_build_block, new_build_block, 1)
+            assert state_class_header in cp_text, "Ralat: Header kelas _ConnectionPageState tidak ditemui!"
+            cp_text = cp_text.replace(state_class_header, auth_injected_logic, 1)
+
+            assert target_init in cp_text, "Ralat: Sasaran _allPeersLoader.init tidak ditemui dalam _ConnectionPageState!"
+            cp_text = cp_text.replace(target_init, f"{target_init}\n    _checkStoredAuth();", 1)
+
+            assert onconnect_sig in cp_text, "Ralat: Tandatangan onConnect tidak ditemui!"
+            cp_text = cp_text.replace(onconnect_sig, onconnect_protected, 1)
+
+            assert old_build_block in cp_text, "Ralat: Blok binaan build() ConnectionPage tidak ditemui!"
+            cp_text = cp_text.replace(old_build_block, new_build_block, 1)
 
             with open(connection_page, "w", encoding="utf-8") as f:
                 f.write(cp_text)
-            print("  [+] Injected Controller Authorization Gate & lock card into connection_page.dart")
+            print("  [+] Injected Controller Authorization Gate & lock card into connection_page.dart (Verified 100%)")
             print("  [+] Stripped 'For faster connection, please set up your own server' from connection_page.dart")
         except Exception as e:
             print(f"  [!] Failed patching connection_page.dart: {e}")
+            raise e
 
     # 9. Buang Tab 'Account' Sepenuhnya dari Tetapan (desktop_setting_page.dart)
     if os.path.exists(desktop_setting_page):
