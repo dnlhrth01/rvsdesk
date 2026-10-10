@@ -9,6 +9,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   # ====================================================================
   # JOB 1: Menjana Fail FFI Bridge Antara Rust & Flutter (Linux Runner)

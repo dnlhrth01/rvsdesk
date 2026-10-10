@@ -1,0 +1,8 @@
+{
+  "app_name": "RVSDesk",
+  "endpoint": "https://service.danialharith.space/rvsdesk-auth.json",
+  "secret_hash": "741778e002a66a23da72acb792171d2127ff4395c248456dcb314904c6a26a6b",
+  "salt": "rvs_auth_sec_2026",
+  "updated_at": "2026-10-10T01:53:30.016618+00:00",
+  "version": 2
+}

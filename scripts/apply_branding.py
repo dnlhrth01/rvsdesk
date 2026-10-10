@@ -13,6 +13,7 @@ import os
 import shutil
 import re
 import sys
+import json
 
 APP_NAME = "RVSDesk"
 APP_DESCRIPTION = "RVSDesk - Free & Secure Portable Remote Desktop"
@@ -20,9 +21,32 @@ APP_VERSION = "1.5.0"
 AUTHOR = "RVS Software"
 SERVER_HOST = "console.danialharith.space"
 SERVER_PUB_KEY = "SQ3o9WEaT4kbLZiGo6EwtIktBA2K220WPkr1tnN66IU="
+AUTH_ENDPOINT = "https://service.danialharith.space/rvsdesk-auth.json"
+DEFAULT_SALT = "rvs_auth_sec_2026"
+DEFAULT_HASH = "741778e002a66a23da72acb792171d2127ff4395c248456dcb314904c6a26a6b"
 
 def apply_branding(repo_root: str, assets_dir: str):
     print(f"[*] Applying RVSDesk branding to repository at: {repo_root}")
+
+    # Muat konfigurasi autorisasi pengawal terkini jika wujud
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
+    local_project_dir = os.path.dirname(current_script_dir)
+    auth_config_path = os.path.join(local_project_dir, "config", "rvsdesk-auth.json")
+    
+    auth_endpoint = AUTH_ENDPOINT
+    auth_salt = DEFAULT_SALT
+    auth_hash = DEFAULT_HASH
+    
+    if os.path.exists(auth_config_path):
+        try:
+            with open(auth_config_path, "r", encoding="utf-8") as f:
+                cdata = json.load(f)
+                auth_endpoint = cdata.get("endpoint", auth_endpoint)
+                auth_salt = cdata.get("salt", auth_salt)
+                auth_hash = cdata.get("secret_hash", auth_hash)
+            print(f"  [+] Loaded controller auth config (Endpoint: {auth_endpoint}, Hash: {auth_hash[:8]}..., Salt: {auth_salt})")
+        except Exception as e:
+            print(f"  [!] Note on loading rvsdesk-auth.json: {e}")
     
     # Core paths verified directly from repository structure
     config_rs = os.path.join(repo_root, "libs", "hbb_common", "src", "config.rs")
@@ -214,21 +238,357 @@ def apply_branding(repo_root: str, assets_dir: str):
         except Exception as e:
             print(f"  [!] Failed stripping UAC in desktop_home_page.dart: {e}")
 
-    # 8. Buang 'For faster connection, please set up your own server' (connection_page.dart)
+    # 8. Suntik Kawalan Pengesahan Rahsia Pengawal & Buang 'setup your own server' (connection_page.dart)
     if os.path.exists(connection_page):
         try:
             with open(connection_page, "r", encoding="utf-8", errors="ignore") as f:
                 cp_text = f.read()
             
+            # Buang tip setup server RustDesk
             cp_text = re.sub(
                 r'setupServerWidget\(\)\s*=>\s*Flexible\(.*?\n\s*\);',
                 'setupServerWidget() => const SizedBox.shrink();',
                 cp_text,
                 flags=re.DOTALL
             )
+
+            # 8a. Suntik imports yang diperlukan (dart:typed_data & package:http/http.dart)
+            if "import 'dart:typed_data';" not in cp_text:
+                cp_text = cp_text.replace(
+                    "import 'dart:convert';",
+                    "import 'dart:convert';\nimport 'dart:typed_data';\nimport 'package:http/http.dart' as http;"
+                )
+
+            # 8b. Suntik pembolehubah & logik autorisasi ke dalam _ConnectionPageState
+            state_class_header = "class _ConnectionPageState extends State<ConnectionPage>\n    with SingleTickerProviderStateMixin, WindowListener {"
             
+            auth_injected_logic = f'''{state_class_header}
+  // =========================================================================
+  // RVSDesk Controller Authorization State & Logic
+  // =========================================================================
+  static const String _rvsAuthEndpoint = "{auth_endpoint}";
+  static const String _rvsFallbackSalt = "{auth_salt}";
+  static const String _rvsFallbackHash = "{auth_hash}";
+  static const String _rvsLocalAuthKey = "rvs_controller_auth_token";
+
+  final RxBool _isControllerAuthorized = false.obs;
+  final RxBool _authLoading = false.obs;
+  final RxString _authError = ''.obs;
+  final RxBool _authObscure = true.obs;
+  final TextEditingController _authPasswordController = TextEditingController();
+
+  static String _calcSha256(String input) {{
+    List<int> bytes = utf8.encode(input);
+    int bitLength = bytes.length * 8;
+    List<int> padded = List<int>.from(bytes)..add(0x80);
+    while ((padded.length % 64) != 56) {{
+      padded.add(0x00);
+    }}
+    for (int i = 7; i >= 0; i--) {{
+      padded.add((bitLength >> (i * 8)) & 0xFF);
+    }}
+    Uint32List w = Uint32List(64);
+    Uint32List k = Uint32List.fromList([
+      0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+      0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+      0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+      0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+      0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+      0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+      0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+      0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+    ]);
+    int h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
+    int h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+    int rotr(int x, int n) => ((x >> n) | (x << (32 - n))) & 0xFFFFFFFF;
+
+    for (int chunk = 0; chunk < padded.length; chunk += 64) {{
+      for (int i = 0; i < 16; i++) {{
+        int idx = chunk + i * 4;
+        w[i] = ((padded[idx] & 0xFF) << 24) |
+               ((padded[idx + 1] & 0xFF) << 16) |
+               ((padded[idx + 2] & 0xFF) << 8) |
+               (padded[idx + 3] & 0xFF);
+      }}
+      for (int i = 16; i < 64; i++) {{
+        int s0 = (rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >> 3)) & 0xFFFFFFFF;
+        int s1 = (rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >> 10)) & 0xFFFFFFFF;
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) & 0xFFFFFFFF;
+      }}
+      int a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+      for (int i = 0; i < 64; i++) {{
+        int s1 = (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) & 0xFFFFFFFF;
+        int ch = ((e & f) ^ ((~e) & g)) & 0xFFFFFFFF;
+        int temp1 = (h + s1 + ch + k[i] + w[i]) & 0xFFFFFFFF;
+        int s0 = (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) & 0xFFFFFFFF;
+        int maj = ((a & b) ^ (a & c) ^ (b & c)) & 0xFFFFFFFF;
+        int temp2 = (s0 + maj) & 0xFFFFFFFF;
+        h = g; g = f; f = e; e = (d + temp1) & 0xFFFFFFFF;
+        d = c; c = b; b = a; a = (temp1 + temp2) & 0xFFFFFFFF;
+      }}
+      h0 = (h0 + a) & 0xFFFFFFFF; h1 = (h1 + b) & 0xFFFFFFFF;
+      h2 = (h2 + c) & 0xFFFFFFFF; h3 = (h3 + d) & 0xFFFFFFFF;
+      h4 = (h4 + e) & 0xFFFFFFFF; h5 = (h5 + f) & 0xFFFFFFFF;
+      h6 = (h6 + g) & 0xFFFFFFFF; h7 = (h7 + h) & 0xFFFFFFFF;
+    }}
+    List<int> result = [h0, h1, h2, h3, h4, h5, h6, h7];
+    return result.map((v) => v.toRadixString(16).padLeft(8, '0')).join('');
+  }}
+
+  Future<void> _checkStoredAuth() async {{
+    try {{
+      final storedToken = bind.mainGetLocalOption(key: _rvsLocalAuthKey);
+      if (storedToken.isEmpty) {{
+        _isControllerAuthorized.value = false;
+        return;
+      }}
+      String activeHash = _rvsFallbackHash;
+      try {{
+        final client = http.Client();
+        final res = await client.get(
+          Uri.parse(_rvsAuthEndpoint),
+          headers: {{'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}},
+        ).timeout(const Duration(seconds: 4));
+        if (res.statusCode == 200) {{
+          final data = jsonDecode(res.body);
+          activeHash = data['secret_hash'] ?? _rvsFallbackHash;
+        }}
+        client.close();
+      }} catch (_) {{}}
+
+      if (storedToken == activeHash) {{
+        _isControllerAuthorized.value = true;
+      }} else {{
+        await bind.mainSetLocalOption(key: _rvsLocalAuthKey, value: '');
+        _isControllerAuthorized.value = false;
+      }}
+    }} catch (_) {{
+      _isControllerAuthorized.value = false;
+    }}
+  }}
+
+  Future<void> _onUnlockPressed() async {{
+    final pass = _authPasswordController.text.trim();
+    if (pass.isEmpty) {{
+      _authError.value = "Sila masukkan kata laluan rahsia pengawal.";
+      return;
+    }}
+    _authLoading.value = true;
+    _authError.value = '';
+
+    String targetSalt = _rvsFallbackSalt;
+    String targetHash = _rvsFallbackHash;
+
+    try {{
+      final client = http.Client();
+      final res = await client.get(
+        Uri.parse(_rvsAuthEndpoint),
+        headers: {{'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}},
+      ).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {{
+        final data = jsonDecode(res.body);
+        targetSalt = data['salt'] ?? _rvsFallbackSalt;
+        targetHash = data['secret_hash'] ?? _rvsFallbackHash;
+      }}
+      client.close();
+    }} catch (_) {{}}
+
+    final computed = _calcSha256(targetSalt + pass);
+    if (computed == targetHash) {{
+      await bind.mainSetLocalOption(key: _rvsLocalAuthKey, value: targetHash);
+      _isControllerAuthorized.value = true;
+      _authPasswordController.clear();
+      showToast("Pengawal RVSDesk berjaya dibuka kunci!");
+    }} else {{
+      _authError.value = "Kata laluan tidak sah! Akses ditolak.";
+    }}
+    _authLoading.value = false;
+  }}
+
+  Future<void> _lockController() async {{
+    await bind.mainSetLocalOption(key: _rvsLocalAuthKey, value: '');
+    _isControllerAuthorized.value = false;
+    showToast("Panel kawalan jauh telah dikunci semula.");
+  }}
+
+  Widget _buildLockedCard(BuildContext context) {{
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(Icons.shield_outlined, size: 52, color: Colors.redAccent),
+          const SizedBox(height: 12),
+          const Text(
+            "Kawalan Jauh Terhad (Technician Only)",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Pelayan RVSDesk ini dihadkan kepada juruteknik berdaftar sahaja. Masukkan kata laluan rahsia pengawal untuk memulakan kawalan jauh keluar.",
+            style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.8)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 18),
+          Obx(() => TextField(
+                controller: _authPasswordController,
+                obscureText: _authObscure.value,
+                onSubmitted: (_) => _onUnlockPressed(),
+                decoration: InputDecoration(
+                  labelText: "Kata Laluan Rahsia Pengawal",
+                  prefixIcon: const Icon(Icons.key_rounded, size: 20),
+                  suffixIcon: IconButton(
+                    icon: Icon(_authObscure.value ? Icons.visibility_off : Icons.visibility, size: 20),
+                    onPressed: () => _authObscure.value = !_authObscure.value,
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              )),
+          Obx(() => _authError.value.isNotEmpty
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(_authError.value, style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w600)),
+                )
+              : const SizedBox.shrink()),
+          const SizedBox(height: 16),
+          Obx(() => ElevatedButton.icon(
+                icon: _authLoading.value
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.lock_open_rounded, size: 18),
+                label: Text(_authLoading.value ? "Mengesahkan..." : "Buka Kunci Pengawal"),
+                onPressed: _authLoading.value ? null : _onUnlockPressed,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              )),
+          const SizedBox(height: 16),
+          Text(
+            "💡 Klien yang ingin dibantu tidak perlu membuka kunci ini. Cuma berikan ID & Password di sebelah kiri.",
+            style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.grey.withOpacity(0.8)),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }}'''
+
+            if state_class_header in cp_text:
+                cp_text = cp_text.replace(state_class_header, auth_injected_logic, 1)
+
+            # 8c. Suntik _checkStoredAuth(); ke initState
+            if "_checkStoredAuth();" not in cp_text and "super.initState();" in cp_text:
+                cp_text = cp_text.replace("super.initState();", "super.initState();\n    _checkStoredAuth();", 1)
+
+            # 8d. Suntik semakan perlindungan ke dalam onConnect
+            onconnect_sig = '''  void onConnect(
+      {bool isFileTransfer = false,
+      bool isViewCamera = false,
+      bool isTerminal = false,
+      bool isTcpTunneling = false}) {'''
+            onconnect_protected = f'''{onconnect_sig}
+    if (!_isControllerAuthorized.value) {{
+      showToast("Akses Ditolak: Sila buka kunci panel pengawal terlebih dahulu.");
+      return;
+    }}'''
+            if onconnect_sig in cp_text and "!_isControllerAuthorized.value" not in cp_text:
+                cp_text = cp_text.replace(onconnect_sig, onconnect_protected, 1)
+
+            # 8e. Gantikan binaan antaramuka build(...) dengan paparan berkunci
+            old_build_block = """  @override
+  Widget build(BuildContext context) {
+    final isOutgoingOnly = bind.isOutgoingOnly();
+    return Column(
+      children: [
+        Expanded(
+            child: Column(
+          children: [
+            Row(
+              children: [
+                Flexible(child: _buildRemoteIDTextField(context)),
+              ],
+            ).marginOnly(top: 22),
+            SizedBox(height: 12),
+            Divider().paddingOnly(right: 12),
+            Expanded(child: PeerTabPage()),
+          ],
+        ).paddingOnly(left: 12.0)),
+        if (!isOutgoingOnly) const Divider(height: 1),
+        if (!isOutgoingOnly) OnlineStatusWidget()
+      ],
+    );
+  }"""
+
+            new_build_block = """  @override
+  Widget build(BuildContext context) {
+    final isOutgoingOnly = bind.isOutgoingOnly();
+    return Column(
+      children: [
+        Expanded(
+          child: Obx(() => !_isControllerAuthorized.value
+              ? Center(child: SingleChildScrollView(child: _buildLockedCard(context)))
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, right: 16, bottom: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.verified_rounded, size: 14, color: Colors.green),
+                                SizedBox(width: 4),
+                                Text("Juruteknik Disahkan", style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: _lockController,
+                            child: const Text("Kunci Semula", style: TextStyle(fontSize: 11, color: Colors.grey, decoration: TextDecoration.underline)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Flexible(child: _buildRemoteIDTextField(context)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider().paddingOnly(right: 12),
+                    Expanded(child: PeerTabPage()),
+                  ],
+                ).paddingOnly(left: 12.0)),
+        ),
+        if (!isOutgoingOnly) const Divider(height: 1),
+        if (!isOutgoingOnly) OnlineStatusWidget()
+      ],
+    );
+  }"""
+
+            if old_build_block in cp_text:
+                cp_text = cp_text.replace(old_build_block, new_build_block, 1)
+
             with open(connection_page, "w", encoding="utf-8") as f:
                 f.write(cp_text)
+            print("  [+] Injected Controller Authorization Gate & lock card into connection_page.dart")
             print("  [+] Stripped 'For faster connection, please set up your own server' from connection_page.dart")
         except Exception as e:
             print(f"  [!] Failed patching connection_page.dart: {e}")

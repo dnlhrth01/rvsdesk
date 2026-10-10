@@ -92,6 +92,26 @@ Oleh kerana perisian ini dibina tanpa membeli sijil digital berbayar bernilai ra
 
 ---
 
+## 🔐 Kawalan Keselamatan Pengawal (Controller Authorization)
+
+Bagi memastikan pelayan persendirian anda (`console.danialharith.space`) tidak disalahgunakan oleh pihak tidak bertanggungjawab:
+
+1. **Panel Kawalan Keluar Dikunci**:
+   - Pengguna biasa/klien yang menerima bantuan hanya boleh melihat ID & One-Time Password di sebelah kiri tanpa boleh meremote orang lain.
+   - Panel kawalan kanan (*Control Remote Desktop*) dikunci secara automatik dengan kad autorisasi juruteknik.
+2. **Pengesahan Kata Laluan Rahsia**:
+   - Juruteknik hanya perlu memasukkan kata laluan rahsia sekali untuk membuka kunci panel. Peranti juruteknik akan mengingati sesi autorisasi tersebut.
+3. **Tukar Kata Laluan Bila-bila Masa Tanpa Perlu Rebuild `.exe`**:
+   - Kata laluan diuruskan secara dinamik melalui pelayan anda di `https://service.danialharith.space/rvsdesk-auth.json`.
+   - Untuk menukar kata laluan:
+     ```powershell
+     python scripts/set_secret_password.py
+     ```
+   - Salin fail `config/rvsdesk-auth.json` yang baharu ke pelayan Next.js anda di `service.danialharith.space`.
+   - Rujuk panduan lengkap: [Panduan Pasang Autorisasi Pelayan](docs/server_auth_setup.md).
+
+---
+
 ## 📁 Struktur Direktori Projek
 
 ```
@@ -104,12 +124,16 @@ rvsdesk/
 │   └── workflows/
 │       └── build-rvsdesk.yml       # CI/CD compiler awan automatik percuma
 ├── scripts/
-│   ├── apply_branding.py           # Skrip penjenamaan kod sumber RustDesk
+│   ├── apply_branding.py           # Skrip penjenamaan kod sumber RustDesk & suntikan auth
+│   ├── set_secret_password.py      # Pengurus & penjana salted hash kata laluan rahsia
 │   ├── create_self_signed_cert.ps1 # Skrip penjana sijil digital percuma (PowerShell)
 │   ├── build_instant_portable.py   # Penjana executable serta-merta
 │   └── smartscreen_whitelist_guide.md # Panduan whitelist Microsoft SmartScreen
 ├── config/
-│   └── rvsdesk_settings.json       # Konfigurasi P2P & STUN percuma
+│   ├── rvsdesk_settings.json       # Konfigurasi P2P & STUN percuma
+│   └── rvsdesk-auth.json           # Konfigurasi hash kata laluan rahsia pengawal
+├── docs/
+│   └── server_auth_setup.md        # Panduan hosting rvsdesk-auth.json di service.danialharith.space
 └── README.md                       # Dokumentasi rasmi projek
 ```
 
