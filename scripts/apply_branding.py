@@ -370,7 +370,7 @@ def apply_branding(repo_root: str, assets_dir: str):
   Future<void> _onUnlockPressed() async {{
     final pass = _authPasswordController.text.trim();
     if (pass.isEmpty) {{
-      _authError.value = "Sila masukkan kata laluan rahsia pengawal.";
+      _authError.value = "Please enter the controller secret password.";
       return;
     }}
     _authLoading.value = true;
@@ -398,9 +398,9 @@ def apply_branding(repo_root: str, assets_dir: str):
       await bind.mainSetLocalOption(key: _rvsLocalAuthKey, value: targetHash);
       _isControllerAuthorized.value = true;
       _authPasswordController.clear();
-      showToast("Pengawal RVSDesk berjaya dibuka kunci!");
+      showToast("RVSDesk controller successfully unlocked!");
     }} else {{
-      _authError.value = "Kata laluan tidak sah! Akses ditolak.";
+      _authError.value = "Invalid password! Access denied.";
     }}
     _authLoading.value = false;
   }}
@@ -408,7 +408,7 @@ def apply_branding(repo_root: str, assets_dir: str):
   Future<void> _lockController() async {{
     await bind.mainSetLocalOption(key: _rvsLocalAuthKey, value: '');
     _isControllerAuthorized.value = false;
-    showToast("Panel kawalan jauh telah dikunci semula.");
+    showToast("Remote control panel has been locked.");
   }}
 
   Widget _buildLockedCard(BuildContext context) {{
@@ -427,13 +427,13 @@ def apply_branding(repo_root: str, assets_dir: str):
           const Icon(Icons.shield_outlined, size: 52, color: Colors.redAccent),
           const SizedBox(height: 12),
           const Text(
-            "Kawalan Jauh Terhad (Technician Only)",
+            "Restricted Remote Control (Technicians Only)",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            "Pelayan RVSDesk ini dihadkan kepada juruteknik berdaftar sahaja. Masukkan kata laluan rahsia pengawal untuk memulakan kawalan jauh keluar.",
+            "This RVSDesk server is restricted to authorized technicians only. Please enter the controller secret password to initiate an outgoing remote session.",
             style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.8)),
             textAlign: TextAlign.center,
           ),
@@ -443,7 +443,7 @@ def apply_branding(repo_root: str, assets_dir: str):
                 obscureText: _authObscure.value,
                 onSubmitted: (_) => _onUnlockPressed(),
                 decoration: InputDecoration(
-                  labelText: "Kata Laluan Rahsia Pengawal",
+                  labelText: "Controller Secret Password",
                   prefixIcon: const Icon(Icons.key_rounded, size: 20),
                   suffixIcon: IconButton(
                     icon: Icon(_authObscure.value ? Icons.visibility_off : Icons.visibility, size: 20),
@@ -464,7 +464,7 @@ def apply_branding(repo_root: str, assets_dir: str):
                 icon: _authLoading.value
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.lock_open_rounded, size: 18),
-                label: Text(_authLoading.value ? "Mengesahkan..." : "Buka Kunci Pengawal"),
+                label: Text(_authLoading.value ? "Verifying..." : "Unlock Controller"),
                 onPressed: _authLoading.value ? null : _onUnlockPressed,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -473,7 +473,7 @@ def apply_branding(repo_root: str, assets_dir: str):
               )),
           const SizedBox(height: 16),
           Text(
-            "💡 Klien yang ingin dibantu tidak perlu membuka kunci ini. Cuma berikan ID & Password di sebelah kiri.",
+            "💡 Clients seeking remote assistance do not need to unlock this. Just provide the ID & One-Time Password on the left.",
             style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.grey.withOpacity(0.8)),
             textAlign: TextAlign.center,
           ),
@@ -493,7 +493,7 @@ def apply_branding(repo_root: str, assets_dir: str):
       bool isTcpTunneling = false}) {'''
             onconnect_protected = f'''{onconnect_sig}
     if (!_isControllerAuthorized.value) {{
-      showToast("Akses Ditolak: Sila buka kunci panel pengawal terlebih dahulu.");
+      showToast("Access Denied: Please unlock the controller panel first.");
       return;
     }}'''
 
@@ -548,14 +548,14 @@ def apply_branding(repo_root: str, assets_dir: str):
                               children: const [
                                 Icon(Icons.verified_rounded, size: 14, color: Colors.green),
                                 SizedBox(width: 4),
-                                Text("Juruteknik Disahkan", style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold)),
+                                Text("Verified Technician", style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
                           const SizedBox(width: 8),
                           InkWell(
                             onTap: _lockController,
-                            child: const Text("Kunci Semula", style: TextStyle(fontSize: 11, color: Colors.grey, decoration: TextDecoration.underline)),
+                            child: const Text("Lock Again", style: TextStyle(fontSize: 11, color: Colors.grey, decoration: TextDecoration.underline)),
                           ),
                         ],
                       ),

@@ -67,18 +67,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { adminPin, newPassword, salt = DEFAULT_SALT } = body;
 
-    // 1. Sahkan Admin PIN bagi keselamatan
+    // 1. Verify Admin PIN for security
     if (!adminPin || adminPin !== ADMIN_PIN) {
       return NextResponse.json(
-        { success: false, error: 'Admin PIN tidak sah! Akses ditolak.' },
+        { success: false, error: 'Invalid Admin PIN! Access denied.' },
         { status: 401 }
       );
     }
 
-    // 2. Sahkan Kata Laluan Baharu
+    // 2. Validate new password
     if (!newPassword || typeof newPassword !== 'string' || newPassword.trim().length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Kata laluan baharu tidak boleh kosong!' },
+        { success: false, error: 'New password cannot be empty!' },
         { status: 400 }
       );
     }
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     const newVersion = (currentAuth.version || 1) + 1;
     const updatedAt = new Date().toISOString();
 
-    // 3. Kira Salted SHA-256 Hash
+    // 3. Compute Salted SHA-256 Hash
     const secretHash = crypto
       .createHash('sha256')
       .update(salt + newPassword.trim())
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       updated_at: updatedAt,
     };
 
-    // 4. Simpan ke fail public/rvsdesk-auth.json jika dibenarkan oleh sistem fail
+    // 4. Save to public/rvsdesk-auth.json if filesystem permits
     try {
       const filePath = getAuthFilePath();
       const dirPath = path.dirname(filePath);
@@ -111,13 +111,13 @@ export async function POST(request: NextRequest) {
       }
       fs.writeFileSync(filePath, JSON.stringify(newAuthPayload, null, 2), 'utf-8');
     } catch (fsErr) {
-      console.warn('[RVSDesk Auth] Amaran: Gagal menulis ke public/, mungkin persekitaran read-only:', fsErr);
+      console.warn('[RVSDesk Auth] Warning: Failed writing to public/, may be read-only environment:', fsErr);
     }
 
     return NextResponse.json(
       {
         success: true,
-        message: 'Kata laluan rahsia pengawal RVSDesk berjaya dikemas kini!',
+        message: 'RVSDesk controller secret password updated successfully!',
         secret_hash: secretHash,
         salt: salt,
         version: newVersion,
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || 'Ralat pelayan memproses permintaan.' },
+      { success: false, error: error.message || 'Internal server error processing request.' },
       { status: 500 }
     );
   }

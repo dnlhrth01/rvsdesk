@@ -1,41 +1,41 @@
-# 🔐 Panduan Konfigurasi Pelayan Autorisasi RVSDesk
-**Hosting di `https://service.danialharith.space/rvsdesk-auth.json`**
+# 🔐 RVSDesk Authorization Server Configuration Guide
+**Hosted at `https://service.danialharith.space/rvsdesk-auth.json`**
 
-Dokumen ini menerangkan cara memasang dan mengemas kini fail pengesahan rahsia pengawal (`rvsdesk-auth.json`) pada pelayan web Next.js anda di `service.danialharith.space`.
-
----
-
-## 🎯 Mengapa Ini Diperlukan?
-Untuk menghalang orang luar atau mana-mana pengguna tidak sah yang memiliki fail `RVSDesk.exe` daripada menyalahgunakan pelayan P2P/Relay anda (`console.danialharith.space`) untuk meremote komputer orang lain:
-- **Klien (Penerima bantuan)**: Boleh buka aplikasi seperti biasa tanpa perlu masukkan sebarang kata laluan (mereka hanya berikan ID & One-Time Password kepada anda).
-- **Juruteknik (Pengawal)**: Panel *"Control Remote Desktop"* dikunci dengan selamat. Juruteknik mesti memasukkan Kata Laluan Rahsia untuk membuka kunci.
-- **Tukar Kata Laluan Bila-bila Masa Tanpa Rebuild .exe**: Apabila anda menukar kata laluan pada pelayan ini, semua aplikasi RVSDesk di luar sana akan serta-merta meminta kata laluan baharu!
+This document explains how to deploy and update the controller secret authorization file (`rvsdesk-auth.json`) on your Next.js web server at `service.danialharith.space`.
 
 ---
 
-## 🚀 Kaedah 1: Fail Statik Next.js (Paling Mudah)
+## 🎯 Why Is This Needed?
+To prevent unauthorized users who have copies of `RVSDesk.exe` from abusing your self-hosted P2P/Relay server (`console.danialharith.space`) to remotely control other computers:
+- **Clients (Help Seekers)**: Open the application as usual without entering any password (they only provide their ID & One-Time Password to you).
+- **Technicians (Controllers)**: The *"Control Remote Desktop"* panel is securely locked. Technicians must enter the Controller Secret Password to unlock outgoing connections.
+- **Change Password Anytime Without Rebuilding .exe**: Whenever you update the password on your server, all distributed RVSDesk clients immediately enforce the new password!
 
-Sekiranya laman web `service.danialharith.space` anda dibina menggunakan Next.js:
+---
 
-1. Buka folder projek Next.js anda di komputer atau pelayan anda.
-2. Salin fail [rvsdesk-auth.json](file:///c:/Users/User/.gemini/antigravity-ide/scratch/rvsdesk/config/rvsdesk-auth.json) daripada projek ini ke dalam folder `public/`:
+## 🚀 Method 1: Next.js Static File (Simplest)
+
+If your website `service.danialharith.space` is built with Next.js:
+
+1. Open your Next.js project directory on your computer or server.
+2. Copy [rvsdesk-auth.json](file:///c:/Users/User/.gemini/antigravity-ide/scratch/rvsdesk/config/rvsdesk-auth.json) from this repository into your `public/` directory:
    ```
-   projek-nextjs/
+   nextjs-project/
    └── public/
        └── rvsdesk-auth.json
    ```
-3. Tolak (*push*) atau *deploy* perubahan ini ke pelayan anda.
-4. Uji di pelayar web anda dengan membuka:
+3. Push or deploy the changes to your server.
+4. Verify in your web browser by navigating to:
    `https://service.danialharith.space/rvsdesk-auth.json`
-   (Pastikan anda melihat output JSON hash).
+   (Confirm you see the JSON hash payload).
 
 ---
 
-## ⚡ Kaedah 2: Next.js App Router API Route (Pilihan Fleksibel)
+## ⚡ Method 2: Next.js App Router API Route (Dynamic / Environment Variables)
 
-Jika anda lebih suka menguruskan kata laluan melalui *Environment Variables* di Vercel atau pelayan anda:
+If you prefer managing the password via *Environment Variables* on Vercel or your server:
 
-Cipta fail `app/rvsdesk-auth/route.ts`:
+Create file `app/rvsdesk-auth.json/route.ts`:
 
 ```typescript
 import { NextResponse } from 'next/server';
@@ -64,16 +64,16 @@ export async function GET() {
 
 ---
 
-## 🔄 Cara Menukar Kata Laluan Rahsia Pengawal
+## 🔄 How to Change the Controller Secret Password
 
-Bila-bila masa anda ingin menukar kata laluan rahsia:
+Whenever you want to rotate or update the secret password:
 
-1. Jalankan skrip penjana di komputer anda:
+1. Run the password CLI on your machine:
    ```powershell
    python scripts/set_secret_password.py
    ```
-   *(Atau tentukan terus: `python scripts/set_secret_password.py --password "KataLaluanBaharu123!"`)*
+   *(Or specify directly: `python scripts/set_secret_password.py --password "NewSecretPass123!"`)*
 
-2. Skrip akan mengira salted SHA-256 hash dan mengemas kini fail `config/rvsdesk-auth.json`.
-3. Salin fail `config/rvsdesk-auth.json` yang baharu ke pelayan `service.danialharith.space`.
-4. **Selesai!** Sesi sedia ada pada komputer juruteknik akan tamat tempoh dan aplikasi RVSDesk akan meminta kata laluan baharu serta-merta.
+2. The script computes the salted SHA-256 hash and updates `config/rvsdesk-auth.json`.
+3. Copy the updated `config/rvsdesk-auth.json` to your `service.danialharith.space` server.
+4. **Done!** Any cached controller authorization expires immediately, and all RVSDesk applications will enforce the new secret password.

@@ -24,7 +24,7 @@ export default function RVSDeskAdminPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
-  // Dapatkan maklumat hash terkini semasa halaman dimuatkan
+  // Fetch current hash information on load
   const fetchCurrentAuth = async () => {
     try {
       setLoading(true);
@@ -34,7 +34,7 @@ export default function RVSDeskAdminPage() {
         setCurrentAuth(data);
       }
     } catch (err) {
-      console.error('Ralat menyemak auth:', err);
+      console.error('Error checking auth:', err);
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export default function RVSDeskAdminPage() {
     fetchCurrentAuth();
   }, []);
 
-  // Jana kata laluan rawak yang kukuh
+  // Generate strong random password
   const generateStrongPassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     const special = '!@#$&*';
@@ -55,24 +55,24 @@ export default function RVSDeskAdminPage() {
     setMessage(null);
   };
 
-  // Salin teks ke papan keratan
+  // Copy text to clipboard
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopiedText(label);
     setTimeout(() => setCopiedText(null), 2500);
   };
 
-  // Kemas kini kata laluan ke pelayan
+  // Update password on server
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
 
     if (!adminPin.trim()) {
-      setMessage({ type: 'error', text: 'Sila masukkan Admin PIN untuk keselamatan.' });
+      setMessage({ type: 'error', text: 'Please enter the Admin PIN for security.' });
       return;
     }
     if (!newPassword.trim()) {
-      setMessage({ type: 'error', text: 'Sila masukkan atau jana kata laluan baharu.' });
+      setMessage({ type: 'error', text: 'Please enter or generate a new password.' });
       return;
     }
 
@@ -93,7 +93,7 @@ export default function RVSDeskAdminPage() {
       if (res.ok && result.success) {
         setMessage({
           type: 'success',
-          text: `Berjaya! Kata laluan rahsia pengawal kini aktif di pelayan (Versi ${result.version}).`,
+          text: `Success! Controller secret password is now active on server (Version ${result.version}).`,
         });
         setCurrentAuth({
           secret_hash: result.secret_hash,
@@ -102,10 +102,10 @@ export default function RVSDeskAdminPage() {
           updated_at: result.updated_at,
         });
       } else {
-        setMessage({ type: 'error', text: result.error || 'Gagal mengemas kini kata laluan.' });
+        setMessage({ type: 'error', text: result.error || 'Failed to update password.' });
       }
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Ralat sambungan ke pelayan.' });
+      setMessage({ type: 'error', text: err.message || 'Server connection error.' });
     } finally {
       setUpdating(false);
     }
@@ -123,28 +123,28 @@ export default function RVSDeskAdminPage() {
             <span style={styles.statusDot} />
             <span>RVSDesk Relay Security</span>
           </div>
-          <h1 style={styles.title}>Pengurus Kata Laluan Pengawal</h1>
+          <h1 style={styles.title}>Controller Password Manager</h1>
           <p style={styles.subtitle}>
-            Tukar kata laluan rahsia bagi pengawal RVSDesk serta-merta tanpa perlu membina semula fail .exe.
+            Change the secret password for RVSDesk controllers instantly without rebuilding .exe binaries.
           </p>
         </div>
 
         {/* Current Server Status */}
         <div style={styles.statusBox}>
           <div style={styles.statusRow}>
-            <span style={styles.statusLabel}>Endpoint Aktif:</span>
+            <span style={styles.statusLabel}>Active Endpoint:</span>
             <span style={styles.statusValue}>https://service.danialharith.space/rvsdesk-auth.json</span>
           </div>
           <div style={styles.statusRow}>
-            <span style={styles.statusLabel}>Hash Semasa:</span>
+            <span style={styles.statusLabel}>Current Hash:</span>
             <span style={styles.statusValueCode}>
-              {loading ? 'Memuatkan...' : currentAuth?.secret_hash ? `${currentAuth.secret_hash.slice(0, 16)}...${currentAuth.secret_hash.slice(-8)}` : 'Tiada'}
+              {loading ? 'Loading...' : currentAuth?.secret_hash ? `${currentAuth.secret_hash.slice(0, 16)}...${currentAuth.secret_hash.slice(-8)}` : 'None'}
             </span>
           </div>
           <div style={styles.statusRow}>
-            <span style={styles.statusLabel}>Versi / Kemas Kini:</span>
+            <span style={styles.statusLabel}>Version / Updated:</span>
             <span style={styles.statusValue}>
-              v{currentAuth?.version || 1} • {currentAuth?.updated_at ? new Date(currentAuth.updated_at).toLocaleTimeString() : 'Baru'}
+              v{currentAuth?.version || 1} • {currentAuth?.updated_at ? new Date(currentAuth.updated_at).toLocaleTimeString() : 'New'}
             </span>
           </div>
         </div>
@@ -162,13 +162,13 @@ export default function RVSDeskAdminPage() {
           {/* Admin PIN */}
           <div style={styles.inputGroup}>
             <div style={styles.labelRow}>
-              <label style={styles.label}>Admin PIN Keselamatan</label>
-              <span style={styles.labelHint}>(Lalai: rvsadmin2026)</span>
+              <label style={styles.label}>Admin Security PIN</label>
+              <span style={styles.labelHint}>(Default: rvsadmin2026)</span>
             </div>
             <div style={styles.inputWrapper}>
               <input
                 type={showPin ? 'text' : 'password'}
-                placeholder="Masukkan Admin PIN anda"
+                placeholder="Enter your Admin PIN"
                 value={adminPin}
                 onChange={(e) => setAdminPin(e.target.value)}
                 style={styles.input}
@@ -178,7 +178,7 @@ export default function RVSDeskAdminPage() {
                 type="button"
                 onClick={() => setShowPin(!showPin)}
                 style={styles.toggleBtn}
-                title="Tunjuk / Sembunyi PIN"
+                title="Show / Hide PIN"
               >
                 {showPin ? '👁️' : '🙈'}
               </button>
@@ -188,19 +188,19 @@ export default function RVSDeskAdminPage() {
           {/* New Password */}
           <div style={styles.inputGroup}>
             <div style={styles.labelRow}>
-              <label style={styles.label}>Kata Laluan Rahsia Baharu</label>
+              <label style={styles.label}>New Secret Password</label>
               <button
                 type="button"
                 onClick={generateStrongPassword}
                 style={styles.generateBtn}
               >
-                ✨ Jana Rawak
+                ✨ Generate Random
               </button>
             </div>
             <div style={styles.inputWrapper}>
               <input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="cth: Rahsia@RVS2026"
+                placeholder="e.g. Secret@RVS2026"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 style={styles.input}
@@ -210,7 +210,7 @@ export default function RVSDeskAdminPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={styles.toggleBtn}
-                title="Tunjuk / Sembunyi Kata Laluan"
+                title="Show / Hide Password"
               >
                 {showPassword ? '👁️' : '🙈'}
               </button>
@@ -219,9 +219,9 @@ export default function RVSDeskAdminPage() {
                   type="button"
                   onClick={() => copyToClipboard(newPassword, 'pass')}
                   style={styles.copyBtn}
-                  title="Salin Kata Laluan"
+                  title="Copy Password"
                 >
-                  {copiedText === 'pass' ? '✓ Disalin' : '📋'}
+                  {copiedText === 'pass' ? '✓ Copied' : '📋'}
                 </button>
               )}
             </div>
@@ -233,7 +233,7 @@ export default function RVSDeskAdminPage() {
             disabled={updating}
             style={updating ? styles.submitBtnDisabled : styles.submitBtn}
           >
-            {updating ? 'Sedang Mengemas Kini Pelayan...' : '🚀 Kemas Kini Kata Laluan Sekarang'}
+            {updating ? 'Updating Server...' : '🚀 Update Secret Password Now'}
           </button>
         </form>
 
@@ -241,11 +241,11 @@ export default function RVSDeskAdminPage() {
         <div style={styles.footer}>
           <div style={styles.footerItem}>
             <span>🛡️</span>
-            <span>Semua perisian <strong>RVSDesk.exe</strong> di luar akan serta-merta meminta kata laluan baharu ini.</span>
+            <span>All outgoing <strong>RVSDesk.exe</strong> controllers will immediately require this new password.</span>
           </div>
           <div style={styles.footerItem}>
             <span>👤</span>
-            <span>Klien biasa yang hanya menerima bantuan teknikal tidak terkesan.</span>
+            <span>Normal clients only receiving remote support are not affected.</span>
           </div>
         </div>
       </div>
