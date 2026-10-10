@@ -485,9 +485,10 @@ def apply_branding(repo_root: str, assets_dir: str):
             if state_class_header in cp_text:
                 cp_text = cp_text.replace(state_class_header, auth_injected_logic, 1)
 
-            # 8c. Suntik _checkStoredAuth(); ke initState
-            if "_checkStoredAuth();" not in cp_text and "super.initState();" in cp_text:
-                cp_text = cp_text.replace("super.initState();", "super.initState();\n    _checkStoredAuth();", 1)
+            # 8c. Suntik _checkStoredAuth(); ke initState bagi _ConnectionPageState
+            target_init = "_allPeersLoader.init(setState);"
+            if "_checkStoredAuth();" not in cp_text and target_init in cp_text:
+                cp_text = cp_text.replace(target_init, f"{target_init}\n    _checkStoredAuth();", 1)
 
             # 8d. Suntik semakan perlindungan ke dalam onConnect
             onconnect_sig = '''  void onConnect(
