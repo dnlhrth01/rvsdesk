@@ -698,12 +698,24 @@ def apply_branding(repo_root: str, assets_dir: str):
             with open(portable_cargo, "r", encoding="utf-8", errors="ignore") as f:
                 p_cargo_text = f.read()
             p_cargo_text = p_cargo_text.replace('description = "RustDesk Remote Desktop"', f'description = "{APP_NAME} Remote Desktop"')
-            p_cargo_text = p_cargo_text.replace('name = "rustdesk-portable-packer"', 'name = "rvsdesk-portable-packer"')
             with open(portable_cargo, "w", encoding="utf-8") as f:
                 f.write(p_cargo_text)
             print("  [+] Patched libs/portable/Cargo.toml (Description updated to RVSDesk Remote Desktop)")
         except Exception as e:
             print(f"  [!] Note on libs/portable/Cargo.toml: {e}")
+
+    # Buang flag '--locked' dari generate.py agar kompilasi portable tidak disekat oleh perubahan versi/metadata
+    portable_gen = os.path.join(repo_root, "libs", "portable", "generate.py")
+    if os.path.exists(portable_gen):
+        try:
+            with open(portable_gen, "r", encoding="utf-8", errors="ignore") as f:
+                gen_code = f.read()
+            gen_code = gen_code.replace('["cargo", "build", "--locked", "--release"]', '["cargo", "build", "--release"]')
+            with open(portable_gen, "w", encoding="utf-8") as f:
+                f.write(gen_code)
+            print("  [+] Removed '--locked' flag in libs/portable/generate.py")
+        except Exception as e:
+            print(f"  [!] Note on libs/portable/generate.py: {e}")
 
     # Semak dan kemas kini mana-mana fail Cargo.toml atau .rc lain untuk memastikan tiada 'RustDesk Remote Desktop' yang tertinggal
     for root, _, files in os.walk(repo_root):

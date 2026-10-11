@@ -197,10 +197,12 @@ jobs:
             }
             powershell -ExecutionPolicy Bypass -File scripts/create_self_signed_cert.ps1 -TargetExe "RVSDesk-Portable.exe"
 
-            # Bina pakej .zip bersama Smart Launcher Anti-SmartScreen
+            # Bina pakej .zip bersama Smart Launcher Anti-SmartScreen & 1-Click Trusted Setup
             New-Item -ItemType Directory -Path "pkg" -Force | Out-Null
             Copy-Item "RVSDesk-Portable.exe" -Destination "pkg\RVSDesk.exe"
             Copy-Item "assets\Buka_RVSDesk.bat" -Destination "pkg\Buka_RVSDesk.bat"
+            if (Test-Path "assets\Setup_Trust_RVSDesk.bat") { Copy-Item "assets\Setup_Trust_RVSDesk.bat" -Destination "pkg\Setup_Trust_RVSDesk.bat" }
+            if (Test-Path "assets\RVSDesk_Authority.cer") { Copy-Item "assets\RVSDesk_Authority.cer" -Destination "pkg\RVSDesk_Authority.cer" }
             Compress-Archive -Path "pkg\*" -DestinationPath "RVSDesk-Portable.zip" -Force
           }
 

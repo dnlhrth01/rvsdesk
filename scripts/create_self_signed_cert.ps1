@@ -32,8 +32,21 @@ if (-not $cert) {
     Write-Host "[i] Sijil sedia ada ditemui: $($cert.Thumbprint)" -ForegroundColor Cyan
 }
 
-# 2. Sijil berada di Cert:\CurrentUser\My sedia digunakan tanpa memerlukan GUI prompt
+# 2. Sijil berada di Cert:\CurrentUser\My & eksport sijil awam (.cer) tanpa private key
 Write-Host "[+] Sijil sedia ada di Cert:\CurrentUser\My." -ForegroundColor Green
+
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$projectDir = Split-Path -Parent $scriptDir
+$cerExportPaths = @(
+    (Join-Path $projectDir "assets\RVSDesk_Authority.cer"),
+    (Join-Path $projectDir "dist\RVSDesk_Authority.cer")
+)
+foreach ($cPath in $cerExportPaths) {
+    if (Test-Path (Split-Path -Parent $cPath)) {
+        [System.IO.File]::WriteAllBytes($cPath, $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert))
+    }
+}
+Write-Host "[+] Sijil awam dieksport untuk persediaan 1-klik (RVSDesk_Authority.cer)." -ForegroundColor Green
 
 
 # 3. Tandatangani fail sasaran jika wujud

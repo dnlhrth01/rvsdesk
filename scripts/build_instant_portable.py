@@ -108,20 +108,28 @@ def build_instant_rvsdesk():
         except Exception as e:
             print(f"[!] Ralat semasa menjalankan pensijilan: {e}")
 
-    # 5. Salin Launcher Anti-SmartScreen (Buka_RVSDesk.bat) & Pakejkan ZIP Percuma
-    launcher_src = os.path.join(assets_dir, "Buka_RVSDesk.bat")
-    launcher_dest = os.path.join(output_dir, "Buka_RVSDesk.bat")
-    if os.path.exists(launcher_src):
-        shutil.copyfile(launcher_src, launcher_dest)
-        print("[+] Disalin: Buka_RVSDesk.bat (Launcher Anti-SmartScreen Tanpa Kos)")
+    # 5. Salin Launcher & 1-Click Trusted Setup Files
+    files_to_copy = [
+        ("Buka_RVSDesk.bat", "Buka_RVSDesk.bat"),
+        ("Setup_Trust_RVSDesk.bat", "Setup_Trust_RVSDesk.bat"),
+        ("RVSDesk_Authority.cer", "RVSDesk_Authority.cer"),
+    ]
+    for src_name, dst_name in files_to_copy:
+        s_path = os.path.join(assets_dir, src_name)
+        d_path = os.path.join(output_dir, dst_name)
+        if os.path.exists(s_path):
+            shutil.copyfile(s_path, d_path)
+            print(f"[+] Disalin: {dst_name}")
 
     zip_dest = os.path.join(output_dir, "RVSDesk-Portable.zip")
     try:
         import zipfile
         with zipfile.ZipFile(zip_dest, "w", zipfile.ZIP_DEFLATED) as zf:
             zf.write(target_exe, arcname="RVSDesk.exe")
-            if os.path.exists(launcher_dest):
-                zf.write(launcher_dest, arcname="Buka_RVSDesk.bat")
+            for _, dst_name in files_to_copy:
+                p = os.path.join(output_dir, dst_name)
+                if os.path.exists(p):
+                    zf.write(p, arcname=dst_name)
             if os.path.exists(os.path.join(output_dir, "rvsdesk.ico")):
                 zf.write(os.path.join(output_dir, "rvsdesk.ico"), arcname="rvsdesk.ico")
         print(f"[+] Dipaketkan: {zip_dest}")
@@ -131,8 +139,8 @@ def build_instant_rvsdesk():
     print("\n==========================================================")
     print(f"  [SELESAI] Fail RVSDesk.exe anda sedia untuk digunakan!")
     print(f"  Lokasi Binary : {target_exe}")
-    print(f"  Lokasi ZIP    : {zip_dest}")
-    print(f"  Smart Launcher: {launcher_dest}")
+    print(f"  Smart Launcher: {os.path.join(output_dir, 'Buka_RVSDesk.bat')}")
+    print(f"  1-Click Setup : {os.path.join(output_dir, 'Setup_Trust_RVSDesk.bat')}")
     print(f"  Saiz fail     : {os.path.getsize(target_exe) / (1024*1024):.2f} MB")
     print("==========================================================")
     return target_exe
