@@ -108,10 +108,32 @@ def build_instant_rvsdesk():
         except Exception as e:
             print(f"[!] Ralat semasa menjalankan pensijilan: {e}")
 
+    # 5. Salin Launcher Anti-SmartScreen (Buka_RVSDesk.bat) & Pakejkan ZIP Percuma
+    launcher_src = os.path.join(assets_dir, "Buka_RVSDesk.bat")
+    launcher_dest = os.path.join(output_dir, "Buka_RVSDesk.bat")
+    if os.path.exists(launcher_src):
+        shutil.copyfile(launcher_src, launcher_dest)
+        print("[+] Disalin: Buka_RVSDesk.bat (Launcher Anti-SmartScreen Tanpa Kos)")
+
+    zip_dest = os.path.join(output_dir, "RVSDesk-Portable.zip")
+    try:
+        import zipfile
+        with zipfile.ZipFile(zip_dest, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.write(target_exe, arcname="RVSDesk.exe")
+            if os.path.exists(launcher_dest):
+                zf.write(launcher_dest, arcname="Buka_RVSDesk.bat")
+            if os.path.exists(os.path.join(output_dir, "rvsdesk.ico")):
+                zf.write(os.path.join(output_dir, "rvsdesk.ico"), arcname="rvsdesk.ico")
+        print(f"[+] Dipaketkan: {zip_dest}")
+    except Exception as e:
+        print(f"[!] Amaran pakej ZIP: {e}")
+
     print("\n==========================================================")
     print(f"  [SELESAI] Fail RVSDesk.exe anda sedia untuk digunakan!")
-    print(f"  Lokasi: {target_exe}")
-    print(f"  Saiz fail: {os.path.getsize(target_exe) / (1024*1024):.2f} MB")
+    print(f"  Lokasi Binary : {target_exe}")
+    print(f"  Lokasi ZIP    : {zip_dest}")
+    print(f"  Smart Launcher: {launcher_dest}")
+    print(f"  Saiz fail     : {os.path.getsize(target_exe) / (1024*1024):.2f} MB")
     print("==========================================================")
     return target_exe
 

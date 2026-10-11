@@ -196,20 +196,30 @@ jobs:
                 --set-icon assets/rvsdesk.ico
             }
             powershell -ExecutionPolicy Bypass -File scripts/create_self_signed_cert.ps1 -TargetExe "RVSDesk-Portable.exe"
+
+            # Bina pakej .zip bersama Smart Launcher Anti-SmartScreen
+            New-Item -ItemType Directory -Path "pkg" -Force | Out-Null
+            Copy-Item "RVSDesk-Portable.exe" -Destination "pkg\RVSDesk.exe"
+            Copy-Item "assets\Buka_RVSDesk.bat" -Destination "pkg\Buka_RVSDesk.bat"
+            Compress-Archive -Path "pkg\*" -DestinationPath "RVSDesk-Portable.zip" -Force
           }
 
-      - name: Upload RVSDesk Artifact
+      - name: Upload RVSDesk Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: RVSDesk-Windows-Portable-x64
-          path: RVSDesk-Portable.exe
+          path: |
+            RVSDesk-Portable.exe
+            RVSDesk-Portable.zip
           if-no-files-found: error
 
       - name: Create GitHub Release (If Tagged)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: RVSDesk-Portable.exe
+          files: |
+            RVSDesk-Portable.exe
+            RVSDesk-Portable.zip
           name: RVSDesk ${{ github.ref_name }}
           draft: false
           prerelease: false
