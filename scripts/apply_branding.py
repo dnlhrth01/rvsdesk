@@ -675,6 +675,52 @@ def apply_branding(repo_root: str, assets_dir: str):
                         pass
         print("  [+] Patched all language dictionary files (Branding Cleaned)")
 
+    # 12. Kemas kini Metadata Binary & Windows FileDescription (Cargo.toml & libs/portable/Cargo.toml)
+    # Menukar 'FileDescription' dan 'ProductName' kepada RVSDesk tetapi MENGEKALKAN kredit hak cipta Purslane Tech Pte. Ltd. mengikut syarat lesen AGPL-3.0
+    cargo_root = os.path.join(repo_root, "Cargo.toml")
+    if os.path.exists(cargo_root):
+        try:
+            with open(cargo_root, "r", encoding="utf-8", errors="ignore") as f:
+                cargo_text = f.read()
+            cargo_text = cargo_text.replace('FileDescription = "RustDesk Remote Desktop"', f'FileDescription = "{APP_NAME} Remote Desktop"')
+            cargo_text = cargo_text.replace('ProductName = "RustDesk"', f'ProductName = "{APP_NAME}"')
+            cargo_text = cargo_text.replace('OriginalFilename = "rustdesk.exe"', 'OriginalFilename = "rvsdesk.exe"')
+            cargo_text = cargo_text.replace('description = "RustDesk Remote Desktop"', f'description = "{APP_NAME} Remote Desktop"')
+            with open(cargo_root, "w", encoding="utf-8") as f:
+                f.write(cargo_text)
+            print("  [+] Patched root Cargo.toml (FileDescription & ProductName updated to RVSDesk, License Credit Preserved)")
+        except Exception as e:
+            print(f"  [!] Note on root Cargo.toml: {e}")
+
+    portable_cargo = os.path.join(repo_root, "libs", "portable", "Cargo.toml")
+    if os.path.exists(portable_cargo):
+        try:
+            with open(portable_cargo, "r", encoding="utf-8", errors="ignore") as f:
+                p_cargo_text = f.read()
+            p_cargo_text = p_cargo_text.replace('description = "RustDesk Remote Desktop"', f'description = "{APP_NAME} Remote Desktop"')
+            p_cargo_text = p_cargo_text.replace('name = "rustdesk-portable-packer"', 'name = "rvsdesk-portable-packer"')
+            with open(portable_cargo, "w", encoding="utf-8") as f:
+                f.write(p_cargo_text)
+            print("  [+] Patched libs/portable/Cargo.toml (Description updated to RVSDesk Remote Desktop)")
+        except Exception as e:
+            print(f"  [!] Note on libs/portable/Cargo.toml: {e}")
+
+    # Semak dan kemas kini mana-mana fail Cargo.toml atau .rc lain untuk memastikan tiada 'RustDesk Remote Desktop' yang tertinggal
+    for root, _, files in os.walk(repo_root):
+        for file in files:
+            if file in ["Cargo.toml", "Runner.rc"]:
+                f_path = os.path.join(root, file)
+                try:
+                    with open(f_path, "r", encoding="utf-8", errors="ignore") as f:
+                        meta_text = f.read()
+                    if "RustDesk Remote Desktop" in meta_text:
+                        meta_text = meta_text.replace("RustDesk Remote Desktop", f"{APP_NAME} Remote Desktop")
+                        with open(f_path, "w", encoding="utf-8") as f:
+                            f.write(meta_text)
+                        print(f"  [+] Updated FileDescription in: {file}")
+                except Exception:
+                    pass
+
     print("[*] RVSDesk branding & complete isolation successfully applied!")
 
 if __name__ == "__main__":

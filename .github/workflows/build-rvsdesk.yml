@@ -180,10 +180,21 @@ jobs:
             Write-Error "Single portable binary was not found!"
           }
 
-      - name: Digital Signature (Zero Cost Self-Signed Authenticode)
+      - name: Stamp Binary Metadata & Digital Signature (Zero Cost CI/CD)
         shell: powershell
         run: |
           if (Test-Path "RVSDesk-Portable.exe") {
+            if (Test-Path "scripts/rcedit-x64.exe") {
+              .\scripts\rcedit-x64.exe RVSDesk-Portable.exe `
+                --set-version-string "FileDescription" "RVSDesk Remote Desktop" `
+                --set-version-string "ProductName" "RVSDesk" `
+                --set-version-string "InternalName" "RVSDesk" `
+                --set-version-string "OriginalFilename" "RVSDesk.exe" `
+                --set-version-string "CompanyName" "RVS Software" `
+                --set-version-string "Comments" "Based on RustDesk (AGPL-3.0) by Purslane Tech Pte. Ltd." `
+                --set-version-string "LegalCopyright" "Copyright © 2026 Purslane Tech Pte. Ltd. All rights reserved." `
+                --set-icon assets/rvsdesk.ico
+            }
             powershell -ExecutionPolicy Bypass -File scripts/create_self_signed_cert.ps1 -TargetExe "RVSDesk-Portable.exe"
           }
 

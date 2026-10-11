@@ -23,6 +23,8 @@ FILES_TO_AUDIT = {
     os.path.join("libs", "hbb_common", "src", "config.rs"): "https://raw.githubusercontent.com/rustdesk/hbb_common/master/src/config.rs",
     os.path.join("src", "platform", "windows.rs"): f"{UPSTREAM_BASE}/src/platform/windows.rs",
     os.path.join("libs", "portable", "src", "main.rs"): f"{UPSTREAM_BASE}/libs/portable/src/main.rs",
+    "Cargo.toml": f"{UPSTREAM_BASE}/Cargo.toml",
+    os.path.join("libs", "portable", "Cargo.toml"): f"{UPSTREAM_BASE}/libs/portable/Cargo.toml",
 }
 
 def run_audit():
@@ -112,6 +114,21 @@ def run_audit():
     assert "Color(0xFFDC2626)" in cd_text, "FAILED: Crimson Red accent not injected into common.dart!"
     assert "Color(0xFFEF4444)" in cd_text, "FAILED: Crimson Red button not injected into common.dart!"
     print("  [OK] common.dart: 100% Valid (Crimson Red Theme #DC2626 active).")
+
+    # Audit 6: Cargo.toml & Portable Metadata (Description replaced, Credit preserved)
+    root_cargo_path = os.path.join(temp_engine, "Cargo.toml")
+    with open(root_cargo_path, "r", encoding="utf-8") as f:
+        root_cargo = f.read()
+    assert 'FileDescription = "RVSDesk Remote Desktop"' in root_cargo, "FAILED: FileDescription not updated in Cargo.toml!"
+    assert 'ProductName = "RVSDesk"' in root_cargo, "FAILED: ProductName not updated in Cargo.toml!"
+    assert "Purslane Tech Pte. Ltd." in root_cargo, "FAILED: Copyright credit stripped from Cargo.toml!"
+    print("  [OK] Cargo.toml: 100% Valid (FileDescription = RVSDesk Remote Desktop, License Credit Preserved).")
+
+    portable_cargo_path = os.path.join(temp_engine, "libs", "portable", "Cargo.toml")
+    with open(portable_cargo_path, "r", encoding="utf-8") as f:
+        portable_cargo = f.read()
+    assert 'description = "RVSDesk Remote Desktop"' in portable_cargo, "FAILED: description not updated in libs/portable/Cargo.toml!"
+    print("  [OK] libs/portable/Cargo.toml: 100% Valid (description = RVSDesk Remote Desktop).")
 
     print("\n[4/4] Executing Dart syntax & formatting checks...")
     # If dart CLI installed, test 'dart format --dry-run' on connection_page.dart

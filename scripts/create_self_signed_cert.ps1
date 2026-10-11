@@ -39,7 +39,10 @@ Write-Host "[+] Sijil sedia ada di Cert:\CurrentUser\My." -ForegroundColor Green
 # 3. Tandatangani fail sasaran jika wujud
 if (Test-Path $TargetExe) {
     Write-Host "[*] Menandatangani binary $TargetExe ..." -ForegroundColor Green
-    $signtool = (Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits" -Filter "signtool.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+    $signtool = (Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits" -Filter "signtool.exe" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like "*x64*" } | Select-Object -First 1).FullName
+    if (-not $signtool) {
+        $signtool = (Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits" -Filter "signtool.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+    }
 
     if ($signtool) {
         & $signtool sign /sha1 $($cert.Thumbprint) /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $TargetExe

@@ -120,4 +120,15 @@ rvsdesk/
 
 ---
 
-*Engineered with high-performance open-source technologies.*
+## ⚖️ License & Attribution (Kredit Lesen Open-Source)
+
+RVSDesk dibina berasaskan projek perisian sumber terbuka **RustDesk** oleh **Purslane Tech Pte. Ltd.** di bawah lesen **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+
+- **Projek Sumber Asal (Upstream Project)**: [RustDesk (github.com/rustdesk/rustdesk)](https://github.com/rustdesk/rustdesk)
+- **Pemilik Hak Cipta Asal (Original Copyright)**: © 2026 Purslane Tech Pte. Ltd. and its contributors. All rights reserved.
+- **Lesen Penggunaan**: GNU Affero General Public License v3.0 ([AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html))
+- **Pematuhan Terma Lesen**: Selaras dengan kehendak lesen AGPL-3.0, semua kod modifikasi, skrip penjenamaan RVSDesk, dan konfigurasi saluran CI/CD disediakan secara terbuka dalam repositori ini.
+
+---
+
+*Engineered with high-performance open-source technologies by RVS Software & Purslane Tech contributors.*

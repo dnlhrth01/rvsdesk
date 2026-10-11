@@ -71,10 +71,30 @@ def build_instant_rvsdesk():
     shutil.copyfile(temp_engine, target_exe)
     print(f"[OK] Fail portable dijana di: {target_exe}")
 
-    # 3. Gantikan ikon jika rcedit wujud atau simpan rvsdesk.ico bersebelahan
-    print("[3/4] Menetapkan aset ikon RVS...")
+    # 3. Kemas kini Windows Resource Metadata (Description, ProductName, Icon) menggunakan rcedit
+    print("[3/4] Menetapkan aset ikon RVS & Metadata Windows...")
     shutil.copyfile(ico_file, os.path.join(output_dir, "rvsdesk.ico"))
     
+    rcedit_exe = os.path.join(project_dir, "scripts", "rcedit-x64.exe")
+    if os.path.exists(rcedit_exe):
+        try:
+            cmd = [
+                rcedit_exe, target_exe,
+                "--set-version-string", "FileDescription", "RVSDesk Remote Desktop",
+                "--set-version-string", "ProductName", "RVSDesk",
+                "--set-version-string", "InternalName", "RVSDesk",
+                "--set-version-string", "OriginalFilename", "RVSDesk.exe",
+                "--set-version-string", "CompanyName", "RVS Software",
+                "--set-version-string", "Comments", "Based on RustDesk (AGPL-3.0) by Purslane Tech Pte. Ltd.",
+                "--set-version-string", "LegalCopyright", "Copyright © 2026 Purslane Tech Pte. Ltd. All rights reserved.",
+                "--set-icon", ico_file
+            ]
+            subprocess.run(cmd, check=True)
+            print("[OK] Metadata Windows (.exe) berjaya dikemas kini: Description -> 'RVSDesk Remote Desktop'")
+            print("     (Kredit hak cipta Purslane Tech Pte. Ltd. dikekalkan selaras dengan lesen AGPL-3.0)")
+        except Exception as e:
+            print(f"[!] Amaran rcedit: {e}")
+
     # 4. Tandatangan digital percuma (Self-Signed)
     print("[4/4] Menandatangani fail RVSDesk secara digital (RM0)...")
     cert_script = os.path.join(project_dir, "scripts", "create_self_signed_cert.ps1")
