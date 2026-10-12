@@ -215,15 +215,15 @@ jobs:
             RVSDesk-Portable.zip
           if-no-files-found: error
 
-      - name: Create GitHub Release (If Tagged)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Publish to GitHub Release (Tag & Latest Rolling Release)
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && format('RVSDesk {0}', github.ref_name) || 'RVSDesk Latest Build' }}
           files: |
             RVSDesk-Portable.exe
             RVSDesk-Portable.zip
-          name: RVSDesk ${{ github.ref_name }}
           draft: false
-          prerelease: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
