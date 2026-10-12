@@ -213,6 +213,9 @@ jobs:
           path: |
             RVSDesk-Portable.exe
             RVSDesk-Portable.zip
+            assets/Setup_Trust_RVSDesk.bat
+            assets/Buka_RVSDesk.bat
+            assets/RVSDesk_Authority.cer
           if-no-files-found: error
 
       - name: Publish to GitHub Release (Tag & Latest Rolling Release)
@@ -223,6 +226,9 @@ jobs:
           files: |
             RVSDesk-Portable.exe
             RVSDesk-Portable.zip
+            assets/Setup_Trust_RVSDesk.bat
+            assets/Buka_RVSDesk.bat
+            assets/RVSDesk_Authority.cer
           draft: false
           prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
         env:
