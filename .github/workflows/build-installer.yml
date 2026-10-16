@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Resolve version into installer\VERSION
-        if: inputs.version != "" || github.event_name == "push"
+        if: github.event_name == 'push' || inputs.version != ''
         shell: powershell
         run: |
           $v = "${{ inputs.version }}"
