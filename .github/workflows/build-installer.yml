@@ -8,6 +8,9 @@ on:
         required: false
         default: ""
   push:
+    branches:
+      - "main"
+      - "master"
     tags:
       - "v*"
 
@@ -28,8 +31,7 @@ jobs:
           $v = "${{ inputs.version }}"
           if ([string]::IsNullOrWhiteSpace($v)) { $v = "${{ github.ref_name }}" }
           $v = $v.Trim() -replace "^v", ""
-          Set-Content -Path "installer\VERSION" -Value $v -NoNewline -Encoding ascii
-          Write-Host "VERSION -> $v"
+          if ($v -match '^\d+(\.\d+)*$') { Set-Content -Path "installer\VERSION" -Value $v -NoNewline -Encoding ascii; Write-Host "VERSION -> $v" } else { Write-Host "Ref '$v' is not a version; keeping committed installer/VERSION:"; Get-Content installer\VERSION }
       - name: Install Inno Setup 6
         run: choco install innosetup -y --no-progress
       - name: Build installer (signed when cert secrets configured)
