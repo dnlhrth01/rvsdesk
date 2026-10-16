@@ -82,11 +82,22 @@ a newer install is blocked by the `[Code]` downgrade guard.
 
 ## CI
 
-`.github/workflows/build-installer.yml` builds an unsigned installer artifact on manual dispatch
-or version tags; release signing stays on the maintainer machine unless signing secrets are added
-to the workflow later.
+`.github/workflows/build-installer.yml` builds `RVSDesk-Setup-<version>.exe` and publishes it to a
+GitHub Release:
 
-The workflow builds unsigned installers; release signing runs on the maintainer machine via `build_installer.ps1`.
+- On a `v*` tag push: builds `RVSDesk-Setup-<tag-version>.exe` (tag minus the leading `v`) and
+  appends it to that version's Release, next to the `RVSDesk-Portable.exe` that
+  `build-rvsdesk.yml` publishes there.
+- On manual `workflow_dispatch`: builds with the input version, or the committed `installer\VERSION`
+  when the input is empty, and publishes to the rolling prerelease tagged `latest`.
+- The setup exe is signed only when the repo secrets `SIGNING_PFX_B64` (base64-encoded PFX) and
+  `SIGNING_PFX_PASSWORD` (its password) are configured; otherwise it falls back to an unsigned
+  build.
+- Payload signing stays off in CI until the committed `dist\` binaries are signable; the
+  release-critical full signing run remains local via `build_installer.ps1` on the maintainer
+  machine.
+- The `gh` CLI creates the release if missing and uploads with `--clobber`, so both workflows can
+  share one release (distinct asset names, no clash).
 
 ## Uninstall and upgrade behavior for end users
 

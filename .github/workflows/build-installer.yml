@@ -11,6 +11,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   build-installer:
     runs-on: windows-latest
@@ -29,11 +32,24 @@ jobs:
           Write-Host "VERSION -> $v"
       - name: Install Inno Setup 6
         run: choco install innosetup -y --no-progress
-      - name: Build installer (unsigned CI build)
-        shell: powershell
+      - name: Build installer (signed when cert secrets configured)
+        shell: pwsh
+        env:
+          PFX_B64: ${{ secrets.SIGNING_PFX_B64 }}
+          PFX_PASS: ${{ secrets.SIGNING_PFX_PASSWORD }}
         run: |
-          # Signing happens on the maintainer machine, or later via certificate secrets added to CI.
-          powershell -ExecutionPolicy Bypass -File installer\build_installer.ps1 -SkipPayloadSigning -SkipSetupSigning
+          # Payload signing stays off in CI: committed dist binaries may be un-signable.
+          if (-not [string]::IsNullOrWhiteSpace($env:PFX_B64)) {
+            $pfxPath = Join-Path $env:RUNNER_TEMP "rvsdesk-signing.pfx"
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:PFX_B64))
+            $secPass = ConvertTo-SecureString $env:PFX_PASS -AsPlainText -Force
+            $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $secPass
+            & installer\build_installer.ps1 -CertThumb $cert.Thumbprint -SkipPayloadSigning
+          } else {
+            Write-Host "No cert secrets - building unsigned (release signing runs on maintainer machine)"
+            & installer\build_installer.ps1 -SkipPayloadSigning -SkipSetupSigning
+          }
+          exit $LASTEXITCODE
       - name: Read built version
         id: read-version
         shell: powershell
@@ -47,3 +63,32 @@ jobs:
         with:
           name: RVSDesk-Setup-${{ steps.read-version.outputs.version }}
           path: installer/Output/*.exe
+
+      - name: Publish setup exe to GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Appends to the same release that build-rvsdesk.yml creates (RVSDesk-Portable.exe etc.);
+          # different asset names so no clash.
+          $isTag = ("${{ github.event_name }}" -eq "push") -and ("${{ github.ref }}" -like "refs/tags/*")
+          $tag = if ($isTag) { "${{ github.ref_name }}" } else { "latest" }
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            if ($tag -eq "latest") {
+              gh release create $tag --title "RVSDesk $tag" --generate-notes --prerelease
+            } else {
+              gh release create $tag --title "RVSDesk $tag" --generate-notes
+            }
+            if ($LASTEXITCODE -ne 0) {
+              # A release for this tag may already exist (build-rvsdesk.yml race) - continue.
+              Write-Host "continuing"
+            }
+          }
+          $exe = Get-ChildItem "installer\Output\*.exe" | Select-Object -First 1
+          if (-not $exe) {
+            Write-Host "No setup exe found in installer\Output - nothing to upload."
+            exit 1
+          }
+          gh release upload $tag $exe.FullName --clobber
+          exit $LASTEXITCODE
