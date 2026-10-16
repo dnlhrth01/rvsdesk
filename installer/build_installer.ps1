@@ -136,6 +136,8 @@ foreach ($f in $files) {
 }
 Write-Host "    Staged $($files.Count) file(s) -> $payloadDir"
 
+$signingEnabled = -not ($SkipPayloadSigning -and $SkipSetupSigning)
+
 Write-Host "==> Locating signtool.exe"
 $signTool = $null
 $stCandidates = @()
@@ -154,40 +156,47 @@ foreach ($cand in $stCandidates) {
   if ($cand -and (Test-Path -LiteralPath $cand)) { $signTool = $cand; break }
 }
 if (-not $signTool) {
-  Write-Host "signtool.exe not found. Install the Windows 10/11 SDK or set SIGNTOOL_EXE." -ForegroundColor Red
-  exit 4
+  if ($signingEnabled) {
+    Write-Host "signtool.exe not found. Install the Windows 10/11 SDK or set SIGNTOOL_EXE." -ForegroundColor Red
+    exit 4
+  }
+  Write-Host "    signtool.exe not found; not required (payload and setup signing disabled)"
 }
-Write-Host "    signtool: $signTool"
+if ($signTool) { Write-Host "    signtool: $signTool" }
 
-Write-Host "==> Resolving signing certificate"
-$codeSigningEku = "1.3.6.1.5.5.7.3.3"
-$cert = $null
-if (-not [string]::IsNullOrWhiteSpace($CertThumb)) {
-  $found = @()
-  foreach ($store in @("Cert:\CurrentUser\My\$CertThumb", "Cert:\LocalMachine\My\$CertThumb")) {
-    $c = Get-ChildItem -Path $store -ErrorAction SilentlyContinue
-    if ($c) { $found += $c }
+if ($signingEnabled) {
+  Write-Host "==> Resolving signing certificate"
+  $codeSigningEku = "1.3.6.1.5.5.7.3.3"
+  $cert = $null
+  if (-not [string]::IsNullOrWhiteSpace($CertThumb)) {
+    $found = @()
+    foreach ($store in @("Cert:\CurrentUser\My\$CertThumb", "Cert:\LocalMachine\My\$CertThumb")) {
+      $c = Get-ChildItem -Path $store -ErrorAction SilentlyContinue
+      if ($c) { $found += $c }
+    }
+    $cert = $found | Where-Object { $_.HasPrivateKey -and ($_.EnhancedKeyUsageList.ObjectId -contains $codeSigningEku) } | Select-Object -First 1
+    if (-not $cert) {
+      Write-Host "Certificate thumbprint $CertThumb not found in CurrentUser/LocalMachine My stores, or missing private key / code-signing EKU $codeSigningEku." -ForegroundColor Red
+      exit 4
+    }
+  } else {
+    $search = @()
+    foreach ($storePath in @("Cert:\CurrentUser\My", "Cert:\LocalMachine\My")) {
+      $search += (Get-ChildItem -Path $storePath -ErrorAction SilentlyContinue | Where-Object {
+        $_.HasPrivateKey -and ($_.EnhancedKeyUsageList.ObjectId -contains $codeSigningEku) -and ($_.NotAfter -gt (Get-Date))
+      })
+    }
+    $cert = $search | Sort-Object NotAfter -Descending | Select-Object -First 1
+    if (-not $cert) {
+      Write-Host "No code-signing certificate found. Install one, set CERT_THUMB (or -CertThumb), or pass -SkipPayloadSigning -SkipSetupSigning." -ForegroundColor Red
+      exit 4
+    }
+    $CertThumb = $cert.Thumbprint
   }
-  $cert = $found | Where-Object { $_.HasPrivateKey -and ($_.EnhancedKeyUsageList.ObjectId -contains $codeSigningEku) } | Select-Object -First 1
-  if (-not $cert) {
-    Write-Host "Certificate thumbprint $CertThumb not found in CurrentUser/LocalMachine My stores, or missing private key / code-signing EKU $codeSigningEku." -ForegroundColor Red
-    exit 4
-  }
+  Write-Host "    Cert: $($cert.Subject) ($CertThumb) expires $($cert.NotAfter)"
 } else {
-  $search = @()
-  foreach ($storePath in @("Cert:\CurrentUser\My", "Cert:\LocalMachine\My")) {
-    $search += (Get-ChildItem -Path $storePath -ErrorAction SilentlyContinue | Where-Object {
-      $_.HasPrivateKey -and ($_.EnhancedKeyUsageList.ObjectId -contains $codeSigningEku) -and ($_.NotAfter -gt (Get-Date))
-    })
-  }
-  $cert = $search | Sort-Object NotAfter -Descending | Select-Object -First 1
-  if (-not $cert) {
-    Write-Host "No code-signing certificate found. Install one, set CERT_THUMB (or -CertThumb), or pass -SkipPayloadSigning -SkipSetupSigning." -ForegroundColor Red
-    exit 4
-  }
-  $CertThumb = $cert.Thumbprint
+  Write-Host "    skipped (payload and setup signing disabled)"
 }
-Write-Host "    Cert: $($cert.Subject) ($CertThumb) expires $($cert.NotAfter)"
 
 function Write-Step([string]$Msg) {
   Write-Host "[build] $Msg"
@@ -270,21 +279,25 @@ if (-not $SkipSetupSigning) {
 }
 
 if (-not $SkipVerify) {
-  Write-Step "Verifying signatures"
   $verifyTargets = @()
   if (-not $SkipSetupSigning) { $verifyTargets += $setupExe }
   if (-not $SkipPayloadSigning) { $verifyTargets += ($signTargets | ForEach-Object { $_.FullName }) }
-  $ErrorActionPreference = 'Continue'
-  foreach ($t in $verifyTargets) {
-    $verifyOut = @(& $signTool verify /pa $t 2>&1)
-    if ($LASTEXITCODE -ne 0) {
-      $vmsg = $verifyOut -join " "
-      Write-Host "Signature verification failed for $t : $vmsg" -ForegroundColor Red
-      exit 6
+  if ($verifyTargets.Count -eq 0) {
+    Write-Step "Nothing to verify (signing disabled)"
+  } else {
+    Write-Step "Verifying signatures"
+    $ErrorActionPreference = 'Continue'
+    foreach ($t in $verifyTargets) {
+      $verifyOut = @(& $signTool verify /pa $t 2>&1)
+      if ($LASTEXITCODE -ne 0) {
+        $vmsg = $verifyOut -join " "
+        Write-Host "Signature verification failed for $t : $vmsg" -ForegroundColor Red
+        exit 6
+      }
     }
+    $ErrorActionPreference = 'Stop'
+    Write-Step "All signatures verified"
   }
-  $ErrorActionPreference = 'Stop'
-  Write-Step "All signatures verified"
 } else {
   Write-Step "Skipping signature verification (-SkipVerify)"
 }
