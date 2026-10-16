@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+# Installer build outputs
+/installer/Output/
+/installer/build/
