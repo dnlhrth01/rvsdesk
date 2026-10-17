@@ -1,0 +1,102 @@
+﻿================================================================================
+PART 1 - SECTION-LEVEL IDENTITY PROOF: dist\RVSDesk.exe vs dist\engine_base.exe
+================================================================================
+Parser: re_work\pe_sections.ps1 (PowerShell PE section parser, hashes bounded to
+        each section's raw bytes: PointerToRawData..+SizeOfRawData).
+
+FILE IDENTITIES
+  A = dist\RVSDesk.exe
+      size   25,815,040
+      sha256 310bd9f4db59e8a3c4a30fb5d7b64d9142b94bef971b7c0c9988267fade08cc4
+  B = dist\engine_base.exe
+      size   25,887,600
+      sha256 8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47
+  size delta = +72,560 bytes (B larger)
+
+HEADER / COFF FACTS (both files)
+                        A (RVSDesk.exe)            B (engine_base.exe)
+  Machine               0x8664 (x64)               0x8664 (x64)
+  Magic                 0x020B (PE32+)             0x020B (PE32+)
+  NumberOfSections      7                          7
+  TimeDateStamp         1790788448 (2026-09-30 17:14:08Z)  1790788448 (same)
+  SizeOfOptionalHeader  240                        240
+  PE CheckSum (stored)  0x018BF1B2 (25,948,594)    0x018BF1B2 (25,948,594)  IDENTICAL
+  Data dir #4 security   VirtualAddress 0x018AE200 (25,879,040) 
+                        Size           8,560      VirtualAddress 25,879,040
+                                                           Size 8,560  IDENTICAL
+  -> A's cert-table range [25,879,040 .. 25,887,600) lies BEYOND A's EOF
+     (25,815,040): the pointer is left over from B and dangles; no certificate
+     bytes are present. Get-AuthenticodeSignature(A) = NotSigned.
+  -> B's cert range ends exactly at B's EOF (25,879,040+8,560=25,887,600);
+     it holds a valid WIN_CERTIFICATE (dwLength 0x2170=8560, revision 0x0200,
+     type 0x0002 PKCS#7), table sha256
+     82bfed7e59db496a5a5ae3d102810c8786e3c9bb07898455727b71f82f496148.
+
+SECTION TABLE, SIDE BY SIDE (SHA-256 of bounded raw bytes)
+name        | VirtualSize      | VirtualAddress   | SizeOfRawData     | PointerToRawData  | SHA-256 (raw bytes)                                      | identical?
+------------+------------------+------------------+-------------------+-------------------+---------------------------------------------------------- -----------
+.text       | A 382,992 = B    | A 4,096 = B      | A 383,488 = B     | A 1,024 = B       | 60610a6e314693f73c3e38dc9ad6698abcdf05bb4a85f4dddb68ec47c97af767 | YES
+.rdata      | A 25,371,868 = B | A 389,120 = B    | A 25,372,160 = B  | A 384,512 = B     | 12ae5fb67e599a9a56079ce8719bb023060c87fcad83d197488386bf611d7196 | YES
+.data       | A 7,528 = B      | A 25,763,840 = B | A 3,072 = B       | A 25,756,672 = B  | 64c09b2b5dc419adb5fba3e9510104472b6ce6550ca743b98b00b3176bc6775f | YES
+.pdata      | A 12,324 = B     | A 25,772,032 = B | A 12,800 = B      | A 25,759,744 = B  | 7791c7c97b18861c4c31966516e9b944f00bb42d0451de3011c13a4720188d53 | YES
+.fptable    | A 256 = B        | A 25,788,416 = B | A 512 = B         | A 25,772,544 = B  | 076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560 | YES
+.rsrc       | A 38,200 / B 102,224 | A 25,792,512 = B | A 38,400 / B 102,400 | A 25,773,056 = B | A 87b111885794391ca61d08975d7c84319172669529f725693aa8f404eaa4d038
+            |                  |                  |                   |                   | B 36587870002a63f5d131b29ca3b9d31d1447c62b23e6c071eafed23db8887c08 | ** DIFFERS **
+.reloc      | A 3,312 = B      | A 25,833,472 / B 25,894,912 | A 3,584 = B | A 25,811,456 / B 25,875,456 | a0441cac6aa9e16755b275bb5d88e96fae4279faccab6bfd3a00f5fef3181be0 (both) | content YES; position moved +64,000
+
+BYTE-IDENTICAL BETWEEN THE TWO FILES (SHA-256 equal over the section's raw range):
+  .text, .rdata, .data, .pdata, .fptable, .reloc   (6 of 7 sections)
+DIFFERENT:
+  .rsrc  (and only .rsrc; VirtualSize 38,200 vs 102,224, raw 38,400 vs 102,400,
+          content hash different - rewritten resource tree)
+  (plus the PE header, see below, and the presence/absence of the appended
+   Authenticode certificate table in B only)
+
+PRECISE HEADER BYTE DIFFERENCES (whole header region scanned, 8 runs total,
+optStart=0x110, section table=0x200..0x318):
+  0x119..0x11A  SizeOfInitializedData            A != B (follows .rsrc growth)
+  0x149..0x14A  SizeOfImage                      A != B (.reloc end moved up)
+  0x194..0x196  data dir #2 resource Size        A 38,200   B 102,224
+  0x1A9..0x1AA  data dir #5 basereloc VA         A 25,833,472 B 25,894,912
+  0x2D0..0x2D2  section .rsrc VirtualSize        A 38,200   B 102,224
+  0x2D9..0x2DA  section .rsrc SizeOfRawData      A 38,400   B 102,400
+  0x2FD..0x2FE  section .reloc VirtualAddress    A 25,833,472 B 25,894,912
+  0x305..0x306  section .reloc PointerToRawData  A 25,811,456 B 25,875,456
+  Everything else in 0x000..0x318 (MZ header, DOS stub, COFF fields, entry
+  point, image base, alignments, TimeDateStamp, CheckSum, subsystem, all other
+  data directories, .text/.rdata/.data/.pdata/.fptable section entries,
+  .rsrc VirtualAddress + PointerToRawData, .reloc VirtualSize + SizeOfRawData)
+  is byte-identical.
+
+FULL-FILE RANGE DIFF (chunked SHA + refinement, common region 0..25,815,039):
+  run 1: 0x0000119 .. 0x0000306   (the header runs above)
+  run 2: 0x1894408 .. 0x189E7FF   (= .rsrc raw+8 through A's EOF)
+         .rsrc bytes 0..7 match (IMAGE_RESOURCE_DIRECTORY prologue), then the
+         resource trees diverge; everything from there to EOF differs, which
+         includes A's .reloc at its original offset where B still has .rsrc
+         bytes (B's .reloc sits 64,000 bytes higher) - position, not content.
+  common prefix = 281 bytes; common suffix = 6 bytes.
+
+RESOURCE CONTENT CHECK (UTF-16 strings inside .rsrc raw range):
+  A .rsrc contains "RVSDesk" at 0x189D134, 0x189D22C, 0x189D294 (VERSIONINFO
+  branding) and "RustDesk" once at 0x189D33A (the AGPL attribution comment).
+  B .rsrc contains "RustDesk" at 0x18946E0, 0x1894840; no "RVSDesk".
+  Whole-file UTF-16 scan of A: "RustDesk" occurs ONLY at 0x189D33A (inside
+  .rsrc); no rebrand strings anywhere in .text/.rdata (which are byte-equal
+  to B anyway).
+
+VERDICT (PART 1):
+  YES - dist\RVSDesk.exe is the stock engine binary (dist\engine_base.exe,
+  PURSLANE/Sectigo-EV-signed RustDesk) with ONLY the .rsrc resource section
+  replaced: all six other sections are SHA-256 byte-identical, and the only
+  header changes are the seven fields required to accommodate the smaller
+  resource section (SizeOfInitializedData, SizeOfImage, resource data-directory
+  size, basereloc data-directory VA, .rsrc VirtualSize/SizeOfRawData, .reloc
+  VirtualAddress/PointerToRawData). NumberOfSections (7), TimeDateStamp,
+  stored CheckSum (0x018BF1B2) and data-directory #4 (25,879,040 / 8,560) are
+  identical, the last one left as a dangling pointer in A. The rewrite
+  invalidated and stripped the Authenticode signature that B carries
+  (A = NotSigned, B = Valid), which is an unavoidable consequence of editing
+  .rsrc - no code or data bytes were touched.
+================================================================================
+

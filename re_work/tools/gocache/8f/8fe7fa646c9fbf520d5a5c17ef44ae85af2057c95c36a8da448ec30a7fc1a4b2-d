@@ -1,0 +1,5 @@
+./archive.go
+./errors.go
+./extractor.go
+./options.go
+./types.go

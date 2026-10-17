@@ -1,0 +1,62 @@
+﻿=== RVSDesk-Setup-1.6.0 extracted payload inventory ===
+Installer: C:\Users\User\Downloads\RVSDesk-Setup-1.6.0.exe
+Installer size: 52793376
+Installer SHA256: e17dd26a6fa0b7d48621ebcf7b326e26170b6e894e51d42d1477a786723da177
+
+--- Files (name | size | sha256) ---
+_manifest.tsv                           571  8c5793486d5aeb16dbaee25d803b9005aa63ba85e012a1422cc12b026e4c61d8
+Buka_RVSDesk.bat                        685  c6f433b38a7b41b5c5d0fa54bb0b9d35a1da5d000f2ec6f337b3b3b43b31109e
+engine_base.exe                    25887600  8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47
+RVSDesk.exe                        25815040  310bd9f4db59e8a3c4a30fb5d7b64d9142b94bef971b7c0c9988267fade08cc4
+rvsdesk.ico                           35357  162a98797aaf26f1de2835458386d78d88a5a7b258c1325c7697274f1a9801b1
+RVSDesk_Authority.cer                   844  a7cdc575e4b24287041ddd50db2b4c67d25b9627c6d8b30afe3f6f4c2751782a
+Setup_Trust_RVSDesk.bat                1199  4a396f565f2429db5a15ab0c05668587574566627afd794a61086c17565f4706
+
+--- EXE details ---
+
+[engine_base.exe]
+  CompanyName       : 
+  Product           : 
+  FileVersion       : 1.5.0
+  OriginalFilename  : rustdesk.exe
+  FileDescription   : RustDesk Remote Desktop
+  LegalCopyright    : Copyright © 2026 Purslane Tech Pte. Ltd. All rights reserved.
+  InternalName      : 
+  ProductName       : RustDesk
+  Comments          : 
+  SigStatus          : Valid
+  SigStatusMessage   : Signature verified.
+  SignerSubject      : CN=PURSLANE, O=PURSLANE, S=North West, C=SG, OID.2.5.4.15=Business Entity, OID.1.3.6.1.4.1.311.60.2.1.3=SG, SERIALNUMBER=53481265A
+  SignerIssuer       : CN=Sectigo Public Code Signing CA EV R36, O=Sectigo Limited, C=GB
+  SignerThumbprint   : 4230334F8A7DD84E50D0273EF379E8B4A82F5DA5
+  SignerNotBefore    : 2026-01-05 08:00:00Z
+  SignerNotAfter     : 2028-02-23 07:59:59Z
+  TimeStamper        : CN=Sectigo Public Time Stamping Signer R37, O=Sectigo Limited, S=Greater London, C=GB
+
+[RVSDesk.exe]
+  CompanyName       : RVS Software
+  Product           : 
+  FileVersion       : 1.5.0
+  OriginalFilename  : RVSDesk.exe
+  FileDescription   : RVSDesk Remote Desktop
+  LegalCopyright    : Copyright © 2026 Purslane Tech Pte. Ltd. All rights reserved.
+  InternalName      : RVSDesk
+  ProductName       : RVSDesk
+  Comments          : Based on RustDesk (AGPL-3.0) by Purslane Tech Pte. Ltd.
+  SigStatus          : NotSigned
+  SigStatusMessage   : The file C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\re_work\extract_setup16\RVSDesk.exe is not digitally signed. You cannot run this script on the current system. For more information about running scripts and setting execution policy, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170
+  SignerCertificate  : (none)
+
+--- Byte-identity verdicts ---
+dist\RVSDesk.exe      sha = 310bd9f4db59e8a3c4a30fb5d7b64d9142b94bef971b7c0c9988267fade08cc4
+extracted RVSDesk.exe  sha = 310bd9f4db59e8a3c4a30fb5d7b64d9142b94bef971b7c0c9988267fade08cc4
+  => extracted RVSDesk.exe == dist\RVSDesk.exe : True
+dist\engine_base.exe   sha = 8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47
+extracted engine_base.exe sha = 8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47
+  => extracted engine_base.exe == dist\engine_base.exe(stock engine 855577721551...) : True
+  expected stock prefix 8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47
+  expected branded prefix 310bd9f4db59e8a3c4a30fb5d7b64d9142b94bef971b7c0c9988267fade08cc4
+
+--- dist\ reference signatures ---
+RVSDesk.exe              NotSigned | (no signer)
+engine_base.exe          Valid | CN=PURSLANE, O=PURSLANE, S=North West, C=SG, OID.2.5.4.15=Business Entity, OID.1.3.6.1.4.1.311.60.2.1.3=SG, SERIALNUMBER=53481265A

@@ -1,0 +1,145 @@
+﻿=== clean_install2 lowpriv run 2026-10-17T19:46:59.0082427+08:00 ===
+STEP1: added #ifndef PrivReq/#define PrivReq "admin"/#endif; PrivilegesRequired=admin -> PrivilegesRequired={#PrivReq}. OK
+STEP2: ISCC compile (unsigned, PrivReq=lowest)...
+ISCC exit=0
+--- ISCC stdout ---
+Inno Setup 6 Command-Line Compiler
+Copyright (C) 1997-2026 Jordan Russell. All rights reserved.
+Portions Copyright (C) 2000-2026 Martijn Laan. All rights reserved.
+Portions Copyright (C) 2001-2004 Alex Yackimoff. All rights reserved.
+https://www.innosetup.com
+
+Compiler engine version: Inno Setup 6.7.3
+Non-commercial use only
+
+Preprocessing
+   Reading file: C:\Users\User\AppData\Local\Programs\Inno Setup 6\ISPPBuiltins.iss
+Parsing [Setup] section, line 40
+Parsing [Setup] section, line 41
+Parsing [Setup] section, line 42
+Parsing [Setup] section, line 43
+Parsing [Setup] section, line 44
+Parsing [Setup] section, line 45
+Parsing [Setup] section, line 46
+Parsing [Setup] section, line 47
+Parsing [Setup] section, line 48
+Parsing [Setup] section, line 49
+Parsing [Setup] section, line 50
+Parsing [Setup] section, line 51
+Parsing [Setup] section, line 52
+Parsing [Setup] section, line 53
+Parsing [Setup] section, line 54
+Parsing [Setup] section, line 55
+Parsing [Setup] section, line 56
+Parsing [Setup] section, line 57
+Parsing [Setup] section, line 58
+Parsing [Setup] section, line 59
+Parsing [Setup] section, line 60
+Parsing [Setup] section, line 61
+Parsing [Setup] section, line 62
+Parsing [Setup] section, line 63
+Parsing [Setup] section, line 64
+Parsing [Setup] section, line 65
+Parsing [Setup] section, line 66
+Parsing [Setup] section, line 67
+Parsing [Setup] section, line 68
+Parsing [Setup] section, line 69
+Parsing [Setup] section, line 70
+Reading file (WizardImageFile)
+Reading file (WizardSmallImageFile)
+Preparing Setup program executable
+   Verification successful
+   Updating icons (Setup.e32)
+   Updating version info (Setup.e32)
+Determining language code pages
+   Reading file: C:\Users\User\AppData\Local\Programs\Inno Setup 6\Default.isl
+   Messages in script file
+Reading default messages from Default.isl
+Parsing [LangOptions], [Messages], and [CustomMessages] sections
+   Reading file: C:\Users\User\AppData\Local\Programs\Inno Setup 6\Default.isl
+   Messages in script file
+Reading [Code] section
+Parsing [Tasks] section, line 73
+Parsing [Icons] section, line 80
+Parsing [Icons] section, line 81
+Parsing [UninstallDelete] section, line 87
+Parsing [UninstallDelete] section, line 88
+Parsing [Run] section, line 84
+Parsing [Files] section, line 76
+Compiling [Code] section
+Creating setup files
+   Verification successful
+   Updating icons (Setup.exe)
+   Compressing: C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\re_work\payload_rvdesk\RVDesk.exe
+   Compressing: C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\re_work\payload_rvdesk\RVSDesk_Authority.cer
+   Compressing: C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\re_work\payload_rvdesk\Setup_Trust_RVSDesk.bat
+   Compressing Setup program executable
+   Updating version info (Setup.exe)
+   Updating manifest (Setup.exe)
+
+
+Successful compile (9.859 sec). Resulting Setup program filename is:
+C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\re_work\rvdesk_out2\RVDesk-Setup-1.5.0-lowpriv.exe
+
+STEP3: non-elevated silent install -> C:\Users\User\AppData\Local\Programs\RVDeskTest
+STEP3 install exit=0
+STEP4: verify installed tree
+--- installed inventory (files+sizes+SHA-256) ---
+
+Path                                                                        Size SHA256                                
+----                                                                        ---- ------                                
+C:\Users\User\AppData\Local\Programs\RVDeskTest\RVDesk.exe              25822600 63AE4E1C4FD205305ADEDF9FDAB8B4537FC...
+C:\Users\User\AppData\Local\Programs\RVDeskTest\RVSDesk_Authority.cer        844 A7CDC575E4B24287041DDD50DB2B4C67D25...
+C:\Users\User\AppData\Local\Programs\RVDeskTest\Setup_Trust_RVSDesk.bat     1199 4A396F565F2429DB5A15AB0C05668587574...
+C:\Users\User\AppData\Local\Programs\RVDeskTest\unins000.dat                5529 4C220CE3C40AD09A6BF3195DE92F481EBB3...
+C:\Users\User\AppData\Local\Programs\RVDeskTest\unins000.exe             4400898 DC085F28B427E9FEF736CB354BA4E4B94A6...
+
+
+
+exe_present=True sha256=63AE4E1C4FD205305ADEDF9FDAB8B4537FCE0B1CC3650B611845992BC1A1AB40
+cer_present=True bat_present=True engine_base_absent=True
+VersionInfo Company='RithV Services' Product='RVDesk' OriginalFilename='RVDesk.exe' Copyright='Copyright (c) 2026 Purslane Tech Pte. Ltd. and contributors; RVDesk by RithV Services (AGPL-3.0)'
+signtool_present=True signtool_verify_pa_exit=0
+--- signtool output ---
+File: C:\Users\User\AppData\Local\Programs\RVDeskTest\RVDesk.exe
+Index  Algorithm  Timestamp    
+========================================
+0      sha256     RFC3161      
+
+Successfully verified: C:\Users\User\AppData\Local\Programs\RVDeskTest\RVDesk.exe
+
+STEP5: copy installed exe -> evidence
+STEP5 evidence size=25822600 sha256=63AE4E1C4FD205305ADEDF9FDAB8B4537FCE0B1CC3650B611845992BC1A1AB40
+STEP6: silent uninstall
+STEP6 uninstall exit=0
+STEP6 test_dir_removed=True
+
+==== ASSERTION TABLE ====
+[A1] ISCC compile exit 0                              PASS (exit=0, 9.859 sec)
+[A2] Installer produced rvdesk_out2\RVDesk-Setup-1.5.0-lowpriv.exe  PASS (27,461,383 bytes)
+[A3] Non-elevated silent install exit 0               PASS (exit=0, no RunAs)
+[A4] RVDesk.exe present                               PASS
+[A5] RVDesk.exe SHA-256 == 63AE4E1C...1AB40           PASS
+[A6] RVSDesk_Authority.cer present                    PASS (844 B, SHA A7CDC575E4B24287041DDD50DB2B4C67D25...)
+[A7] Setup_Trust_RVSDesk.bat present                  PASS (1,199 B, SHA 4A396F565F2429DB5A15AB0C05668587574...)
+[A8] engine_base.exe ABSENT                           PASS
+[A9] VersionInfo Company = RithV Services             PASS
+[A10] VersionInfo Product = RVDesk                    PASS
+[A11] VersionInfo OriginalFilename = RVDesk.exe       PASS
+[A12] VersionInfo Copyright retains Purslane credit   PASS ("Copyright (c) 2026 Purslane Tech Pte. Ltd. and contributors; RVDesk by RithV Services (AGPL-3.0)")
+[A13] signtool verify /pa on installed exe exit 0     PASS
+[A14] Evidence copy re_work\cleaninstall_evidence\RVDesk-installed.exe (SHA match)  PASS
+[A15] Uninstall silent exit 0                         PASS
+[A16] Test dir removed                                PASS
+
+==== STEP EXIT CODES ====
+Step2 ISCC compile      : 0
+Step3 install           : 0
+Step4 signtool /pa      : 0
+Step6 uninstall         : 0
+
+Evidence: re_work\cleaninstall_evidence\RVDesk-installed.exe
+Installer: re_work\rvdesk_out2\RVDesk-Setup-1.5.0-lowpriv.exe
+Log: re_work\clean_install2.log
+Tracked-file change: only installer\RVSDesk.iss (PrivReq define + directive). No commits.
+==== END ====

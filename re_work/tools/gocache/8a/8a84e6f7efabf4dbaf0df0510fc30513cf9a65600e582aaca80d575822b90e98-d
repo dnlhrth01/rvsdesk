@@ -1,0 +1,4 @@
+./slice.go
+./stream.go
+./slice_test.go
+./stream_test.go

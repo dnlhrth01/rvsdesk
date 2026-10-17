@@ -24,24 +24,36 @@
   #define OutputBase "RVSDesk-Setup-" + AppVersion
 #endif
 
+#ifndef AppName
+  #define AppName "RVSDesk"
+#endif
+
+#ifndef AppExeName
+  #define AppExeName "RVSDesk.exe"
+#endif
+
+#ifndef PrivReq
+  #define PrivReq "admin"
+#endif
+
 [Setup]
-AppName=RVSDesk
+AppName={#AppName}
 AppVersion={#AppVersion}
-AppVerName=RVSDesk {#AppVersion}
+AppVerName={#AppName} {#AppVersion}
 AppPublisher=RVS Software
 AppId={{3D92DD6B-C0B8-464B-BC15-795B5425B4D0}
 DefaultDirName={autopf}\RVSDesk
 DefaultGroupName=RVSDesk
 DisableProgramGroupPage=yes
-PrivilegesRequired=admin
+PrivilegesRequired={#PrivReq}
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir={#OutputDir}
 OutputBaseFilename={#OutputBase}
 SetupIconFile=..\assets\rvsdesk.ico
-UninstallDisplayIcon={app}\RVSDesk.exe
-UninstallDisplayName=RVSDesk
+UninstallDisplayIcon={app}\{#AppExeName}
+UninstallDisplayName={#AppName}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -65,11 +77,11 @@ Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
 
 [Icons]
-Name: "{autoprograms}\RVSDesk"; Filename: "{app}\RVSDesk.exe"; WorkingDir: "{app}"; Comment: "RVSDesk remote desktop"
-Name: "{autodesktop}\RVSDesk"; Filename: "{app}\RVSDesk.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Comment: "RVSDesk remote desktop"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\RVSDesk.exe"; Description: "Launch RVSDesk"; Flags: nowait postinstall skipifsilent unchecked; WorkingDir: "{app}"
+Filename: "{app}\{#AppExeName}"; Description: "Launch RVSDesk"; Flags: nowait postinstall skipifsilent unchecked; WorkingDir: "{app}"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\logs"

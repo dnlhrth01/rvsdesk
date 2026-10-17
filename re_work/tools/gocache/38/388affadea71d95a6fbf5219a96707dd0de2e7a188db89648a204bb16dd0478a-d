@@ -1,0 +1,7 @@
+./archive.go
+./errors.go
+./extractor.go
+./options.go
+./types.go
+./public_api_test.go
+./sample_integration_test.go

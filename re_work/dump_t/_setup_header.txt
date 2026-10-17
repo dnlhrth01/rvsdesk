@@ -1,0 +1,6 @@
+DefaultDirName={tmp}
+DefaultGroupName=(Default)
+LicenseFile=
+InfoFile=
+ExtraHeaderFile=
+CompiledCodeLength=533

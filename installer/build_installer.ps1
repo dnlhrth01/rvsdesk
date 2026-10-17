@@ -34,6 +34,17 @@
 
 .PARAMETER SkipVerify
   Skip signtool verify /pa checks.
+
+.PARAMETER AppName
+  Optional branded app name passed to ISCC as /DAppName. Empty = RVSDesk default.
+
+.PARAMETER AppExeName
+  Optional branded payload exe name passed to ISCC as /DAppExeName. Empty = RVSDesk.exe default.
+  When set, the staged payload must contain this file or the build fails with exit 3.
+
+.PARAMETER OutputBaseOverride
+  Optional setup exe base filename (no extension) passed to ISCC as /DOutputBase.
+  Empty = RVSDesk-Setup-<version>.
 #>
 [CmdletBinding()]
 param(
@@ -41,6 +52,9 @@ param(
   [string]$PayloadSource = "",
   [string]$OutputDir = "",
   [string]$CertThumb = $env:CERT_THUMB,
+  [string]$AppName = "",
+  [string]$AppExeName = "",
+  [string]$OutputBaseOverride = "",
   [switch]$SkipPayloadSigning,
   [switch]$SkipSetupSigning,
   [switch]$SkipVerify
@@ -118,8 +132,10 @@ if (-not (Test-Path -LiteralPath $PayloadSource)) {
   Write-Host "Payload source not found: $PayloadSource" -ForegroundColor Red
   exit 3
 }
-if (-not (Test-Path -LiteralPath (Join-Path $PayloadSource "RVSDesk.exe"))) {
-  Write-Host "Payload source does not contain RVSDesk.exe: $PayloadSource" -ForegroundColor Red
+$requiredExe = "RVSDesk.exe"
+if (-not [string]::IsNullOrWhiteSpace($AppExeName)) { $requiredExe = $AppExeName }
+if (-not (Test-Path -LiteralPath (Join-Path $PayloadSource $requiredExe))) {
+  Write-Host "Payload source does not contain $requiredExe : $PayloadSource" -ForegroundColor Red
   exit 3
 }
 if (Test-Path -LiteralPath $payloadDir) { Remove-Item -LiteralPath $payloadDir -Recurse -Force }
@@ -135,6 +151,13 @@ foreach ($f in $files) {
   Copy-Item -LiteralPath $f.FullName -Destination $dest -Force
 }
 Write-Host "    Staged $($files.Count) file(s) -> $payloadDir"
+
+if (-not [string]::IsNullOrWhiteSpace($AppExeName)) {
+  if (-not (Test-Path -LiteralPath (Join-Path $payloadDir $AppExeName))) {
+    Write-Host "Staged payload is missing $AppExeName (required by -AppExeName)." -ForegroundColor Red
+    exit 3
+  }
+}
 
 $signingEnabled = -not ($SkipPayloadSigning -and $SkipSetupSigning)
 
@@ -253,15 +276,22 @@ Write-Step "Compiling installer with ISCC"
 if (-not (Test-Path -LiteralPath $OutputDir)) {
   New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 }
+$isccArgs = @("/DAppVersion=$Version", "/DAppVersionQuad=$VersionQuad", "/DPayloadDir=$payloadDir", "/DOutputDir=$OutputDir")
+if (-not [string]::IsNullOrWhiteSpace($AppName)) { $isccArgs += "/DAppName=$AppName" }
+if (-not [string]::IsNullOrWhiteSpace($AppExeName)) { $isccArgs += "/DAppExeName=$AppExeName" }
+if (-not [string]::IsNullOrWhiteSpace($OutputBaseOverride)) { $isccArgs += "/DOutputBase=$OutputBaseOverride" }
+$isccArgs += (Join-Path $installerDir "RVSDesk.iss")
 $ErrorActionPreference = 'Continue'
-& $iscc "/DAppVersion=$Version" "/DAppVersionQuad=$VersionQuad" "/DPayloadDir=$payloadDir" "/DOutputDir=$OutputDir" (Join-Path $installerDir "RVSDesk.iss") 2>&1 | Tee-Object -FilePath (Join-Path $OutputDir "iscc-$Version.log")
+& $iscc @isccArgs 2>&1 | Tee-Object -FilePath (Join-Path $OutputDir "iscc-$Version.log")
 $ErrorActionPreference = 'Stop'
 if ($LASTEXITCODE -ne 0) {
   $isccLogPath = Join-Path $OutputDir "iscc-$Version.log"
   Write-Host "ISCC compile failed (exit $LASTEXITCODE). See $isccLogPath." -ForegroundColor Red
   exit 5
 }
-$setupExe = Join-Path $OutputDir "RVSDesk-Setup-$Version.exe"
+$outputBaseName = "RVSDesk-Setup-$Version"
+if (-not [string]::IsNullOrWhiteSpace($OutputBaseOverride)) { $outputBaseName = $OutputBaseOverride }
+$setupExe = Join-Path $OutputDir "$outputBaseName.exe"
 if (-not (Test-Path -LiteralPath $setupExe)) {
   Write-Host "ISCC reported success but setup exe not found: $setupExe" -ForegroundColor Red
   exit 5

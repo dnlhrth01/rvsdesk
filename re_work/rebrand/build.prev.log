@@ -1,0 +1,37 @@
+﻿[2026-10-17T17:33:01] === RVDesk rebrand build start ===
+[2026-10-17T17:33:01] root   : C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk
+[2026-10-17T17:33:01] work   : C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\re_work\rebrand
+[2026-10-17T17:33:01] host   : IMX93-HP / PS 5.1.26100.9444
+[2026-10-17T17:33:01] src    : C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\dist\engine_base.exe
+[2026-10-17T17:33:01] patcher: C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\scripts\rcedit-x64.exe
+[2026-10-17T17:33:01] icon   : C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\assets\rvsdesk.ico
+[2026-10-17T17:33:01] --- Step 1: copy engine_base.exe -> re_work\rebrand\RVDesk.exe ---
+[2026-10-17T17:33:01] source size = 25887600 bytes; source sha256 = 8555777215510D83D2D61C9DC984E4FCC838BD7E79F9D18A42585431F5E8BB47
+[2026-10-17T17:33:01] copy   size = 25887600 bytes
+[2026-10-17T17:33:01] --- Step 2: strip Authenticode signature (zero dd#4, truncate) ---
+[2026-10-17T17:33:04] PE e_lfanew=0xF8 optionalStart=0x110 Magic=0x20B ddBase=0x70 dd#4 file offset=416
+[2026-10-17T17:33:04] dd#4 BEFORE: VirtualAddress=25879040  Size=8560  (expected VA=25879040 Size=8560)
+[2026-10-17T17:33:04] file size BEFORE strip = 25887600 bytes
+[2026-10-17T17:33:04] file size AFTER  strip = 25879040 bytes (truncated to VA)
+[2026-10-17T17:33:06] dd#4 AFTER : VirtualAddress=0  Size=0
+[2026-10-17T17:33:07] --- Step 3: resources-only rebrand via rcedit ---
+[2026-10-17T17:33:07] rcedit command: "C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\scripts\rcedit-x64.exe" C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\re_work\rebrand\RVDesk.exe --set-icon C:\Users\User\.gemini\antigravity-ide\scratch\rvsdesk\assets\rvsdesk.ico --set-file-version 1.5.0.0 --set-product-version 1.5.0.0 --set-version-string CompanyName "RithV Services" --set-version-string ProductName RVDesk --set-version-string FileDescription "RVDesk Remote Desktop" --set-version-string InternalName RVDesk --set-version-string OriginalFilename RVDesk.exe --set-version-string LegalCopyright "Copyright (c) 2026 Purslane Tech Pte. Ltd. and contributors; RVDesk by RithV Services (AGPL-3.0)" --set-version-string Comments "Based on RustDesk by Purslane Tech Pte. Ltd., licensed under AGPL-3.0"
+[2026-10-17T17:33:07] rcedit exit code = 0
+[2026-10-17T17:33:07] file size after rcedit = 25815040 bytes
+[2026-10-17T17:33:07] --- Step 4a: VersionInfo dump ---
+[2026-10-17T17:33:11] CompanyName      = RithV Services
+[2026-10-17T17:33:11] ProductName      = RVDesk
+[2026-10-17T17:33:11] FileVersion      = 1.5.0.0
+[2026-10-17T17:33:11] ProductVersion   = 1.5.0.0
+[2026-10-17T17:33:11] FileDescription  = RVDesk Remote Desktop
+[2026-10-17T17:33:11] InternalName     = RVDesk
+[2026-10-17T17:33:11] OriginalFilename = RVDesk.exe
+[2026-10-17T17:33:11] LegalCopyright   = Copyright (c) 2026 Purslane Tech Pte. Ltd. and contributors; RVDesk by RithV Services (AGPL-3.0)
+[2026-10-17T17:33:11] Comments         = Based on RustDesk by Purslane Tech Pte. Ltd., licensed under AGPL-3.0
+[2026-10-17T17:33:11] --- Step 4b: Authenticode + dd#4 ---
+[2026-10-17T17:33:11] Authenticode status = NotSigned
+[2026-10-17T17:33:11] Authenticode signer  = <none>
+[2026-10-17T17:33:11] dd#4 FINAL: VirtualAddress=0  Size=0
+[2026-10-17T17:33:11] --- Step 4c: PE section parse + section SHA-256 vs stock source ---
+[2026-10-17T17:33:11] NumberOfSections = 7   SizeOfOptionalHeader = 240   Magic = 0x20B
+[2026-10-17T17:33:12]   .text      VS=382992     RawSz=383488     RawPtr=1024       | stock VS=382992 RawSz=383488 | sha256=60610A6E314693F73C3E38DC9AD6698ABCDF05BB4A85F4DDDB68EC47C97AF767 | IDENTICAL

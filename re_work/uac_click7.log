@@ -1,0 +1,16 @@
+[19:17:13.673] clicker7 started timeout=200s
+[19:17:14.314] pass #1 consent pid=10320 full-range scan starting (high=4294967295)
+[19:18:26.559] pass #1 scan done in 72s, kept=12
+[19:18:26.568]   cand: hwnd=0x1007A class='#32770' title='The Event Manager Dashboard' pid=28340
+[19:18:26.570]   cand: hwnd=0x2A0CBC class='#32770' title='' pid=4936
+[19:18:26.575]   cand: hwnd=0x420E1C class='#32770' title='' pid=4936
+[19:18:26.580]   cand: hwnd=0x7FFF007A class='#32770' title='The Event Manager Dashboard' pid=0
+[19:18:26.581]   cand: hwnd=0x7FFF0CBC class='#32770' title='' pid=0
+[19:18:26.581]   cand: hwnd=0x7FFF0E1C class='#32770' title='' pid=0
+[19:18:26.598]   cand: hwnd=0x8001007A class='#32770' title='The Event Manager Dashboard' pid=28340
+[19:18:26.598]   cand: hwnd=0x802A0CBC class='#32770' title='' pid=4936
+[19:18:26.603]   cand: hwnd=0x80420E1C class='#32770' title='' pid=4936
+[19:18:26.607]   cand: hwnd=0xFFFF007A class='#32770' title='The Event Manager Dashboard' pid=0
+[19:18:26.611]   cand: hwnd=0xFFFF0CBC class='#32770' title='' pid=0
+[19:18:26.618]   cand: hwnd=0xFFFF0E1C class='#32770' title='' pid=0
+[19:18:27.460] pass #2 consent pid=10320 full-range scan starting (high=4294967295)
