@@ -34,22 +34,35 @@ jobs:
           if ($v -match '^\d+(\.\d+)*$') { Set-Content -Path "installer\VERSION" -Value $v -NoNewline -Encoding ascii; Write-Host "VERSION -> $v" } else { Write-Host "Ref '$v' is not a version; keeping committed installer/VERSION:"; Get-Content installer\VERSION }
       - name: Install Inno Setup 6
         run: choco install innosetup -y --no-progress
+      - name: Build RVDesk payload
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File scripts\build_rvdesk_payload.ps1
       - name: Build installer (signed when cert secrets configured)
         shell: pwsh
         env:
           PFX_B64: ${{ secrets.SIGNING_PFX_B64 }}
           PFX_PASS: ${{ secrets.SIGNING_PFX_PASSWORD }}
         run: |
-          # Payload signing stays off in CI: committed dist binaries may be un-signable.
+          # Freshly generated RVDesk payload (scripts\build_rvdesk_payload.ps1) is
+          # signable, so payload and setup signing run when cert secrets are configured.
+          $v = (Get-Content installer\VERSION -Raw).Trim()
           if (-not [string]::IsNullOrWhiteSpace($env:PFX_B64)) {
             $pfxPath = Join-Path $env:RUNNER_TEMP "rvsdesk-signing.pfx"
             [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:PFX_B64))
             $secPass = ConvertTo-SecureString $env:PFX_PASS -AsPlainText -Force
             $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $secPass
-            & installer\build_installer.ps1 -CertThumb $cert.Thumbprint -SkipPayloadSigning
+            # Trust the imported cert so the later signtool verify /pa pass can succeed.
+            try {
+              $cerPath = Join-Path $env:RUNNER_TEMP "rvsdesk-signing.cer"
+              Export-Certificate -Cert $cert -FilePath $cerPath -Force | Out-Null
+              Import-Certificate -FilePath $cerPath -CertStoreLocation Cert:\CurrentUser\Root | Out-Null
+            } catch {
+              Write-Host "Warning: could not import signing cert into Cert:\CurrentUser\Root: $_"
+            }
+            & installer\build_installer.ps1 -CertThumb $cert.Thumbprint -PayloadSource build_rvdesk_payload -AppName RVDesk -AppExeName RVDesk.exe -OutputBaseOverride "RVDesk-Setup-$v"
           } else {
             Write-Host "No cert secrets - building unsigned (release signing runs on maintainer machine)"
-            & installer\build_installer.ps1 -SkipPayloadSigning -SkipSetupSigning
+            & installer\build_installer.ps1 -PayloadSource build_rvdesk_payload -AppName RVDesk -AppExeName RVDesk.exe -OutputBaseOverride "RVDesk-Setup-$v" -SkipPayloadSigning -SkipSetupSigning
           }
           exit $LASTEXITCODE
       - name: Read built version

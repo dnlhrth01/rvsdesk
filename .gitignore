@@ -5,3 +5,4 @@ __pycache__/
 # Installer build outputs
 /installer/Output/
 /installer/build/
+/build_rvdesk_payload/

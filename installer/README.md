@@ -82,22 +82,35 @@ a newer install is blocked by the `[Code]` downgrade guard.
 
 ## CI
 
-`.github/workflows/build-installer.yml` builds `RVSDesk-Setup-<version>.exe` and publishes it to a
-GitHub Release:
+`.github/workflows/build-installer.yml` builds the corrected **RVDesk**-branded installer from a
+freshly generated payload (`scripts/build_rvdesk_payload.ps1`, run as its own CI step right before
+the build step) and publishes `RVDesk-Setup-<version>.exe` to a GitHub Release:
 
-- On a `v*` tag push: builds `RVSDesk-Setup-<tag-version>.exe` (tag minus the leading `v`) and
+- On a `v*` tag push: builds `RVDesk-Setup-<tag-version>.exe` (tag minus the leading `v`) and
   appends it to that version's Release, next to the `RVSDesk-Portable.exe` that
   `build-rvsdesk.yml` publishes there.
 - On manual `workflow_dispatch`: builds with the input version, or the committed `installer\VERSION`
   when the input is empty, and publishes to the rolling prerelease tagged `latest`.
-- The setup exe is signed only when the repo secrets `SIGNING_PFX_B64` (base64-encoded PFX) and
-  `SIGNING_PFX_PASSWORD` (its password) are configured; otherwise it falls back to an unsigned
-  build.
-- Payload signing stays off in CI until the committed `dist\` binaries are signable; the
-  release-critical full signing run remains local via `build_installer.ps1` on the maintainer
-  machine.
+- Payload signing and setup signing happen only when the repo secrets `SIGNING_PFX_B64`
+  (base64-encoded PFX) and `SIGNING_PFX_PASSWORD` (its password) are configured; the freshly
+  generated payload is signable (the old committed `dist\` binaries were not). Without secrets the
+  build falls back to `-SkipPayloadSigning -SkipSetupSigning` (unsigned build).
 - The `gh` CLI creates the release if missing and uploads with `--clobber`, so both workflows can
   share one release (distinct asset names, no clash).
+
+## RVDesk (rebranded) build
+
+CI and corrected local builds generate the payload in-repo, then package it:
+
+```powershell
+powershell -File scripts\build_rvdesk_payload.ps1
+powershell -File installer\build_installer.ps1 -Version <v> -PayloadSource build_rvdesk_payload -AppName RVDesk -AppExeName RVDesk.exe -OutputBaseOverride RVDesk-Setup-<v>
+```
+
+Result: `installer\Output\RVDesk-Setup-<v>.exe`.
+
+RVSDesk-line builds from `dist\` remain available via the `build_installer.ps1` defaults, but they
+are deprecated (stale payload - see docs/RVDesk-Installer-RE.md); use the RVDesk payload flow above.
 
 ## Uninstall and upgrade behavior for end users
 
