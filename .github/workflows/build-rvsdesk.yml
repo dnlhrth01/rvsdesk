@@ -1,4 +1,4 @@
-name: Build RVSDesk Portable (Zero-Cost CI/CD)
+name: Build RVDesk Portable (Zero-Cost CI/CD)
 
 on:
   workflow_dispatch:
@@ -61,15 +61,15 @@ jobs:
             ./flutter/macos/Runner/bridge_generated.h
 
   # ====================================================================
-  # JOB 2: Kompilasi Windows Single Portable .exe (RVSDesk)
+  # JOB 2: Kompilasi Windows Single Portable .exe (RVDesk)
   # ====================================================================
   build-windows:
-    name: Build RVSDesk Windows Single .exe
+    name: Build RVDesk Windows Single .exe
     needs: [generate-bridge]
     runs-on: windows-2022
 
     steps:
-      - name: Checkout RVSDesk Configuration & Branding Repo
+      - name: Checkout RVDesk Configuration & Branding Repo
         uses: actions/checkout@v4
 
       - name: Setup Python Environment
@@ -132,7 +132,7 @@ jobs:
         run: |
           pip install -r engine/libs/portable/requirements.txt
 
-      - name: Apply RVSDesk Branding, Logo & Strip UAC Warning
+      - name: Apply RVDesk Branding, Logo & Strip UAC Warning
         run: |
           python scripts/apply_branding.py engine
 
@@ -153,19 +153,19 @@ jobs:
           # 1. Kompilasi enjin teras dan bina bundle Flutter (tanpa --hwcodec agar tidak memerlukan header C++ FFmpeg yang hilang)
           python build.py --portable --flutter --skip-portable-pack
           
-          # 2. Salin output build Flutter ke direktori release dan namakan rvsdesk.exe
+          # 2. Salin output build Flutter ke direktori release dan namakan RVDesk.exe
           if (Test-Path "flutter/build/windows/x64/runner/Release") {
             Copy-Item -Path "flutter/build/windows/x64/runner/Release" -Destination "..\rustdesk_bundle" -Recurse -Force
             if (Test-Path "..\rustdesk_bundle\rustdesk.exe") {
-              Move-Item -Path "..\rustdesk_bundle\rustdesk.exe" -Destination "..\rustdesk_bundle\rvsdesk.exe" -Force
+              Move-Item -Path "..\rustdesk_bundle\rustdesk.exe" -Destination "..\rustdesk_bundle\RVDesk.exe" -Force
             }
           } else {
             Write-Error "Flutter Windows release bundle was not found!"
           }
           
-          # 3. Jana fail tunggal portable .exe menggunakan alat pemaket rasmi (menyasarkan rvsdesk.exe)
+          # 3. Jana fail tunggal portable .exe menggunakan alat pemaket rasmi (menyasarkan RVDesk.exe)
           cd libs/portable
-          python generate.py -f ../../../rustdesk_bundle -o . -e ../../../rustdesk_bundle/rvsdesk.exe
+          python generate.py -f ../../../rustdesk_bundle -o . -e RVDesk.exe
           cd ../..
           
           # 4. Cari binary tunggal mudah alih yang telah siap dipaketkan
@@ -174,61 +174,103 @@ jobs:
             $singleExe = Get-ChildItem -Path . -Filter "*install*.exe" -Recurse | Select-Object -First 1
           }
           if ($singleExe) {
-            Copy-Item $singleExe.FullName -Destination "..\RVSDesk-Portable.exe" -Force
-            Write-Host "Berjaya menjana: RVSDesk-Portable.exe ($($singleExe.Length) bytes)"
+            Copy-Item $singleExe.FullName -Destination "..\RVDesk-Portable.exe" -Force
+            Write-Host "Berjaya menjana: RVDesk-Portable.exe ($($singleExe.Length) bytes)"
           } else {
             Write-Error "Single portable binary was not found!"
           }
 
-      - name: Stamp Binary Metadata & Digital Signature (Zero Cost CI/CD)
+      - name: Stamp Binary Metadata & Sign Portable
         shell: powershell
+        env:
+          PFX_B64: ${{ secrets.SIGNING_PFX_B64 }}
+          PFX_PASS: ${{ secrets.SIGNING_PFX_PASSWORD }}
         run: |
-          if (Test-Path "RVSDesk-Portable.exe") {
+          if (Test-Path "RVDesk-Portable.exe") {
             if (Test-Path "scripts/rcedit-x64.exe") {
-              .\scripts\rcedit-x64.exe RVSDesk-Portable.exe `
-                --set-version-string "FileDescription" "RVSDesk Remote Desktop" `
-                --set-version-string "ProductName" "RVSDesk" `
-                --set-version-string "InternalName" "RVSDesk" `
-                --set-version-string "OriginalFilename" "RVSDesk.exe" `
-                --set-version-string "CompanyName" "RVS Software" `
-                --set-version-string "Comments" "Based on RustDesk (AGPL-3.0) by Purslane Tech Pte. Ltd." `
-                --set-version-string "LegalCopyright" "Copyright © 2026 Purslane Tech Pte. Ltd. All rights reserved." `
+              .\scripts\rcedit-x64.exe RVDesk-Portable.exe `
+                --set-version-string "FileDescription" "RVDesk Remote Desktop" `
+                --set-version-string "ProductName" "RVDesk" `
+                --set-version-string "InternalName" "RVDesk" `
+                --set-version-string "OriginalFilename" "RVDesk.exe" `
+                --set-version-string "CompanyName" "RithV Services" `
+                --set-version-string "Comments" "Based on RustDesk by Purslane Tech Pte. Ltd., licensed under AGPL-3.0" `
+                --set-version-string "LegalCopyright" "Copyright (c) 2026 Purslane Tech Pte. Ltd. and contributors; RVDesk by RithV Services (AGPL-3.0)" `
                 --set-icon assets/rvsdesk.ico
+              if ($LASTEXITCODE -ne 0) { throw "rcedit stamp failed ($LASTEXITCODE)" }
+              $stampedProduct = (Get-Item "RVDesk-Portable.exe").VersionInfo.ProductName
+              if ($stampedProduct -ne "RVDesk") { throw "rcedit verification failed: ProductName is '$stampedProduct', expected 'RVDesk'" }
+            } else {
+              throw "rcedit not found at scripts/rcedit-x64.exe"
             }
-            powershell -ExecutionPolicy Bypass -File scripts/create_self_signed_cert.ps1 -TargetExe "RVSDesk-Portable.exe"
+            # Sign with the configured release certificate; never mint a per-run cert.
+            if (-not [string]::IsNullOrWhiteSpace($env:PFX_B64) -and -not [string]::IsNullOrWhiteSpace($env:PFX_PASS)) {
+              $pfxPath = Join-Path $env:RUNNER_TEMP "rvdesk-release.pfx"
+              [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:PFX_B64))
+              $secPass = ConvertTo-SecureString $env:PFX_PASS -AsPlainText -Force
+              $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $secPass
+              if (-not $cert) { throw "PFX import failed" }
+              # Trust this run's imported cert only so verify /pa can pass. Nothing is exported or published.
+              try {
+                $rootStore = New-Object Security.Cryptography.X509Certificates.X509Store("Root", "CurrentUser")
+                $rootStore.Open("ReadWrite")
+                $rootStore.Add($cert)
+                $rootStore.Close()
+              } catch {
+                Write-Host "Warning: could not trust signing cert for verify /pa: $_"
+              }
+              if (Test-Path "assets\RVDesk_Authority.cer") {
+                $authorityThumb = (New-Object Security.Cryptography.X509Certificates.X509Certificate2((Resolve-Path "assets\RVDesk_Authority.cer").Path)).Thumbprint
+                if ($authorityThumb -ne $cert.Thumbprint) {
+                  Write-Host "WARNING: signing cert $($cert.Thumbprint) differs from assets\RVDesk_Authority.cer ($authorityThumb)"
+                }
+              }
+              $signtoolPath = (Get-Command signtool.exe -ErrorAction SilentlyContinue).Source
+              if (-not $signtoolPath) {
+                $signtoolPath = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue | Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1 -ExpandProperty FullName
+              }
+              if (-not $signtoolPath) { throw "signtool.exe not found on runner" }
+              & $signtoolPath sign /fd SHA256 /sha1 $cert.Thumbprint /tr http://timestamp.digicert.com /td SHA256 /d "RVDesk Remote Desktop" "RVDesk-Portable.exe"
+              if ($LASTEXITCODE -ne 0) { throw "signtool sign failed ($LASTEXITCODE)" }
+              & $signtoolPath verify /pa "RVDesk-Portable.exe"
+              if ($LASTEXITCODE -ne 0) { throw "signtool verify /pa failed ($LASTEXITCODE)" }
+              Write-Host "RVDesk-Portable.exe signed ($($cert.Thumbprint)) and verified"
+            } else {
+              Write-Host "portable unsigned (no signing secrets)"
+            }
 
             # Bina pakej .zip bersama Smart Launcher Anti-SmartScreen & 1-Click Trusted Setup
             New-Item -ItemType Directory -Path "pkg" -Force | Out-Null
-            Copy-Item "RVSDesk-Portable.exe" -Destination "pkg\RVSDesk.exe"
-            Copy-Item "assets\Buka_RVSDesk.bat" -Destination "pkg\Buka_RVSDesk.bat"
-            if (Test-Path "assets\Setup_Trust_RVSDesk.bat") { Copy-Item "assets\Setup_Trust_RVSDesk.bat" -Destination "pkg\Setup_Trust_RVSDesk.bat" }
-            if (Test-Path "assets\RVSDesk_Authority.cer") { Copy-Item "assets\RVSDesk_Authority.cer" -Destination "pkg\RVSDesk_Authority.cer" }
-            Compress-Archive -Path "pkg\*" -DestinationPath "RVSDesk-Portable.zip" -Force
+            Copy-Item "RVDesk-Portable.exe" -Destination "pkg\RVDesk.exe"
+            Copy-Item "assets\RVDesk-Launcher.bat" -Destination "pkg\RVDesk-Launcher.bat"
+            if (Test-Path "assets\Setup_Trust_RVDesk.bat") { Copy-Item "assets\Setup_Trust_RVDesk.bat" -Destination "pkg\Setup_Trust_RVDesk.bat" }
+            if (Test-Path "assets\RVDesk_Authority.cer") { Copy-Item "assets\RVDesk_Authority.cer" -Destination "pkg\RVDesk_Authority.cer" }
+            Compress-Archive -Path "pkg\*" -DestinationPath "RVDesk-Portable.zip" -Force
           }
 
-      - name: Upload RVSDesk Artifacts
+      - name: Upload RVDesk Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: RVSDesk-Windows-Portable-x64
+          name: RVDesk-Windows-Portable-x64
           path: |
-            RVSDesk-Portable.exe
-            RVSDesk-Portable.zip
-            assets/Setup_Trust_RVSDesk.bat
-            assets/Buka_RVSDesk.bat
-            assets/RVSDesk_Authority.cer
+            RVDesk-Portable.exe
+            RVDesk-Portable.zip
+            assets/Setup_Trust_RVDesk.bat
+            assets/RVDesk-Launcher.bat
+            assets/RVDesk_Authority.cer
           if-no-files-found: error
 
       - name: Publish to GitHub Release (Tag & Latest Rolling Release)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
-          name: ${{ startsWith(github.ref, 'refs/tags/') && format('RVSDesk {0}', github.ref_name) || 'RVSDesk Latest Build' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && format('RVDesk {0}', github.ref_name) || 'RVDesk Latest Build' }}
           files: |
-            RVSDesk-Portable.exe
-            RVSDesk-Portable.zip
-            assets/Setup_Trust_RVSDesk.bat
-            assets/Buka_RVSDesk.bat
-            assets/RVSDesk_Authority.cer
+            RVDesk-Portable.exe
+            RVDesk-Portable.zip
+            assets/Setup_Trust_RVDesk.bat
+            assets/RVDesk-Launcher.bat
+            assets/RVDesk_Authority.cer
           draft: false
           prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
         env:

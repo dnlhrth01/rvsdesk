@@ -1,16 +1,16 @@
 <#
 .SYNOPSIS
     Menjana Sijil Digital Sendiri (Self-Signed Code Signing Certificate) secara 100% percuma
-    dan menandatangani fail RVSDesk.exe untuk Windows.
+    dan menandatangani fail RVDesk.exe untuk Windows.
 #>
 
 param (
-    [string]$TargetExe = "target\release\RVSDesk.exe",
-    [string]$CertSubject = "CN=RVSDesk Security Authority, O=RVS Software"
+    [string]$TargetExe = "target\release\RVDesk.exe",
+    [string]$CertSubject = "CN=RVDesk Code Signing Authority, O=RithV Services, C=US"
 )
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  RVSDesk Zero-Cost Code Signing Generator" -ForegroundColor Yellow
+Write-Host "  RVDesk Zero-Cost Code Signing Generator" -ForegroundColor Yellow
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 # 1. Semak sama ada sijil sudah wujud atau cipta sijil baharu
@@ -38,15 +38,15 @@ Write-Host "[+] Sijil sedia ada di Cert:\CurrentUser\My." -ForegroundColor Green
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectDir = Split-Path -Parent $scriptDir
 $cerExportPaths = @(
-    (Join-Path $projectDir "assets\RVSDesk_Authority.cer"),
-    (Join-Path $projectDir "dist\RVSDesk_Authority.cer")
+    (Join-Path $projectDir "assets\RVDesk_Authority.cer"),
+    (Join-Path $projectDir "dist\RVDesk_Authority.cer")
 )
 foreach ($cPath in $cerExportPaths) {
     if (Test-Path (Split-Path -Parent $cPath)) {
         [System.IO.File]::WriteAllBytes($cPath, $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert))
     }
 }
-Write-Host "[+] Sijil awam dieksport untuk persediaan 1-klik (RVSDesk_Authority.cer)." -ForegroundColor Green
+Write-Host "[+] Sijil awam dieksport untuk persediaan 1-klik (RVDesk_Authority.cer)." -ForegroundColor Green
 
 
 # 3. Tandatangani fail sasaran jika wujud

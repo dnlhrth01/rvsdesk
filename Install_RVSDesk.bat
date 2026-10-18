@@ -1,34 +1,34 @@
 @echo off
 :: ============================================================================
-:: RVSDesk Signed Installer
+:: RVDesk Signed Installer
 :: Elevated installer: stages SOURCE_ROOT to WORK_DIR, deploys to INSTALL_DIR,
 :: code-signs every .exe/.dll/.ocl with signtool (SHA-256 + RFC3161 timestamp),
-:: verifies each binary with "signtool verify /pa", then launches RVSDesk.exe.
+:: verifies each binary with "signtool verify /pa", then launches RVDesk.exe.
 :: Usage: Install_RVSDesk.bat [/dry-run] [/no-launch] [/dir="D:\Path"]
 :: Exit codes: 0=pass 2=admin/UAC 3=config/source 4=cert 5=signtool
 ::             6=sign/verify 7=stage/deploy
-:: Log: LOG_DIR\RVSDesk_Install_<stamp>.log
+:: Log: LOG_DIR\RVDesk_Install_<stamp>.log
 :: ============================================================================
 setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 set "SCRIPT_PATH=%~f0"
 set "SCRIPT_NAME=%~nx0"
 
-if not defined INSTALL_DIR set "INSTALL_DIR=C:\Program Files\RVSDesk"
+if not defined INSTALL_DIR set "INSTALL_DIR=C:\Program Files\RVDesk"
 if not defined SOURCE_ROOT set "SOURCE_ROOT=%~dp0"
-if not defined WORK_DIR set "WORK_DIR=%TEMP%\RVSDesk_Install"
+if not defined WORK_DIR set "WORK_DIR=%TEMP%\RVDesk_Install"
 if not defined STAGING_DIR set "STAGING_DIR=%WORK_DIR%\staging"
 if not defined BACKUP_DIR set "BACKUP_DIR=%WORK_DIR%\backup"
-if not defined LOG_DIR set "LOG_DIR=%ProgramData%\RVSDesk\logs"
-if not defined PRIMARY_APP set "PRIMARY_APP=RVSDesk.exe"
+if not defined LOG_DIR set "LOG_DIR=%ProgramData%\RVDesk\logs"
+if not defined PRIMARY_APP set "PRIMARY_APP=RVDesk.exe"
 if not defined LAUNCH_APP set "LAUNCH_APP=1"
-if not defined CERT_SUBJECT set "CERT_SUBJECT=CN=RVSDesk Code Signing, O=RVS Software, C=US"
+if not defined CERT_SUBJECT set "CERT_SUBJECT=CN=RVDesk Code Signing, O=RithV Services, C=US"
 if not defined CERT_VALIDITY_YEARS set "CERT_VALIDITY_YEARS=3"
 if not defined CERT_THUMB set "CERT_THUMB="
 if not defined EXPECTED_SUBJECT set "EXPECTED_SUBJECT="
 rem EXPECTED_SUBJECT empty = auto-set from the resolved certificate subject
 if not defined SIGNTOOL_EXE set "SIGNTOOL_EXE="
-if not defined SIGN_DESCRIPTION set "SIGN_DESCRIPTION=RVSDesk installer package - Authenticode signed"
+if not defined SIGN_DESCRIPTION set "SIGN_DESCRIPTION=RVDesk installer package - Authenticode signed"
 if not defined TIMESTAMP_URLS set "TIMESTAMP_URLS=http://timestamp.digicert.com http://timestamp.sectigo.com http://timestamp.globalsign.com/tsa/rfc3161"
 if not defined TIMESTAMP_ATTEMPTS set "TIMESTAMP_ATTEMPTS=2"
 if not defined REQUIRE_TIMESTAMP set "REQUIRE_TIMESTAMP=1"
@@ -110,7 +110,7 @@ set "CURRENT_LOC=:main-loginit"
 if not exist "%LOG_DIR%" (
     mkdir "%LOG_DIR%" 2>nul
     if not exist "%LOG_DIR%" (
-        set "LOG_DIR=%TEMP%\RVSDesk_Install\logs"
+        set "LOG_DIR=%TEMP%\RVDesk_Install\logs"
         mkdir "!LOG_DIR!" 2>nul
     )
 )
@@ -118,9 +118,9 @@ for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss
 for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set "LOG_DATE=%%i"
 rem %%s becomes %s for PowerShell inside for /f (unix epoch seconds)
 for /f %%i in ('powershell -NoProfile -Command "[int][double]::Parse((Get-Date -Uformat %%s))"') do set "START_EPOCH=%%i"
-set "LOG_FILE=%LOG_DIR%\RVSDesk_Install_!LOG_STAMP!.log"
-echo === RVSDesk Signed Installer ===
->>"!LOG_FILE!" echo === RVSDesk Signed Installer ===
+set "LOG_FILE=%LOG_DIR%\RVDesk_Install_!LOG_STAMP!.log"
+echo === RVDesk Signed Installer ===
+>>"!LOG_FILE!" echo === RVDesk Signed Installer ===
 echo Script: %SCRIPT_PATH%
 >>"!LOG_FILE!" echo Script: %SCRIPT_PATH%
 echo Started: !LOG_DATE! !TIME!
@@ -267,7 +267,7 @@ exit /b 0
 :trustCertForVerification
 set "CURRENT_LOC=%~0"
 if "!DRY_RUN!"=="1" exit /b 0
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$t=$env:CERT_THUMB; $cert=Get-ChildItem Cert:\CurrentUser\My\$t -ErrorAction SilentlyContinue; if(-not $cert){ $cert=Get-ChildItem Cert:\LocalMachine\My\$t -ErrorAction SilentlyContinue }; if(-not $cert){ exit 2 }; if($cert.Subject -ne $cert.Issuer){ exit 1 }; $cer=Join-Path $env:WORK_DIR 'rvsdesk_signing.cer'; [System.IO.File]::WriteAllBytes($cer,$cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)); $n=0; try{ Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\Root -ErrorAction Stop | Out-Null; $n++ }catch{}; try{ Import-Certificate -FilePath $cer -CertStoreLocation Cert:\CurrentUser\Root -ErrorAction Stop | Out-Null; $n++ }catch{}; try{ Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher -ErrorAction Stop | Out-Null }catch{}; try{ Import-Certificate -FilePath $cer -CertStoreLocation Cert:\CurrentUser\TrustedPublisher -ErrorAction Stop | Out-Null }catch{}; if($n -gt 0){ exit 0 } else { exit 2 }" > "%WORK_DIR%\cert_trust.txt" 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$t=$env:CERT_THUMB; $cert=Get-ChildItem Cert:\CurrentUser\My\$t -ErrorAction SilentlyContinue; if(-not $cert){ $cert=Get-ChildItem Cert:\LocalMachine\My\$t -ErrorAction SilentlyContinue }; if(-not $cert){ exit 2 }; if($cert.Subject -ne $cert.Issuer){ exit 1 }; $cer=Join-Path $env:WORK_DIR 'rvdesk_signing.cer'; [System.IO.File]::WriteAllBytes($cer,$cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)); $n=0; try{ Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\Root -ErrorAction Stop | Out-Null; $n++ }catch{}; try{ Import-Certificate -FilePath $cer -CertStoreLocation Cert:\CurrentUser\Root -ErrorAction Stop | Out-Null; $n++ }catch{}; try{ Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher -ErrorAction Stop | Out-Null }catch{}; try{ Import-Certificate -FilePath $cer -CertStoreLocation Cert:\CurrentUser\TrustedPublisher -ErrorAction Stop | Out-Null }catch{}; if($n -gt 0){ exit 0 } else { exit 2 }" > "%WORK_DIR%\cert_trust.txt" 2>&1
 set "RC=!ERRORLEVEL!"
 if "!RC!"=="0" (
     call :log INFO "Self-signed certificate imported to trust stores for verification"
@@ -339,7 +339,7 @@ call :log INFO "Certificate generated and installed to LocalMachine My store"
 set "CERT_SUBJECT_FOUND=%CERT_SUBJECT%"
 set "CERT_STORE=Cert:\LocalMachine\My"
 if not defined EXPECTED_SUBJECT set "EXPECTED_SUBJECT=%CERT_SUBJECT%"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$t=$env:CERT_THUMB; $cert=Get-ChildItem Cert:\LocalMachine\My\$t -ErrorAction Stop; $cer=Join-Path $env:WORK_DIR 'rvsdesk_signing.cer'; [System.IO.File]::WriteAllBytes($cer,$cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)); Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\Root | Out-Null; Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher | Out-Null; Import-Certificate -FilePath $cer -CertStoreLocation Cert:\CurrentUser\TrustedPublisher | Out-Null; 'IMPORTED'" > "%WORK_DIR%\cert_import.txt" 2>nul
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$t=$env:CERT_THUMB; $cert=Get-ChildItem Cert:\LocalMachine\My\$t -ErrorAction Stop; $cer=Join-Path $env:WORK_DIR 'rvdesk_signing.cer'; [System.IO.File]::WriteAllBytes($cer,$cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)); Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\Root | Out-Null; Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher | Out-Null; Import-Certificate -FilePath $cer -CertStoreLocation Cert:\CurrentUser\TrustedPublisher | Out-Null; 'IMPORTED'" > "%WORK_DIR%\cert_import.txt" 2>nul
 findstr /c:"IMPORTED" "%WORK_DIR%\cert_import.txt" >nul 2>&1
 if errorlevel 1 (
     call :error 4 "certgen" "certificate trust import failed"
@@ -572,7 +572,7 @@ if not defined SIGNTOOL set "SIGNTOOL=not-resolved"
 if not defined CERT_THUMB set "CERT_THUMB=none"
 if not defined CERT_STORE set "CERT_STORE=none"
 echo ============================================================
-echo   RVSDesk Installer Summary: %~1
+echo   RVDesk Installer Summary: %~1
 echo ============================================================
 echo   Exit code: !LAST_ERROR!
 echo   Files staged: !STAGED_COUNT!   deployed new: !DEPLOY_NEW!   overwritten: !DEPLOY_OVER!   identical skips: !SKIP_COPY!
@@ -585,7 +585,7 @@ echo   Install dir: "%INSTALL_DIR%"
 echo   Duration: !DURATION! seconds
 echo   Log file: "%LOG_FILE%"
 echo ============================================================
->>"%LOG_FILE%" echo   RVSDesk Installer Summary: %~1
+>>"%LOG_FILE%" echo   RVDesk Installer Summary: %~1
 >>"%LOG_FILE%" echo   Exit code: !LAST_ERROR!
 >>"%LOG_FILE%" echo   staged=!STAGED_COUNT! new=!DEPLOY_NEW! over=!DEPLOY_OVER! identical=!SKIP_COPY!
 >>"%LOG_FILE%" echo   binaries=!BIN_COUNT! signed=!SIGN_NOW! alreadysigned=!SIGN_SKIP!

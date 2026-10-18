@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-10-18
+
+Full Changelog: https://github.com/dnlhrth01/rvsdesk/compare/v1.7.0...v1.8.0
+
+### Added
+
+- RVDesk trust and launch helpers: `assets/Setup_Trust_RVDesk.bat` (trusts
+  `RVDesk_Authority.cer` in the user Root/TrustedPublisher stores, clears the Mark
+  of the Web, then launches `RVDesk.exe`) and `assets/RVDesk-Launcher.bat`
+  (SmartScreen-friendly launcher for the bundled `RVDesk.exe`).
+- New RVDesk code-signing identity: `scripts/create_self_signed_cert.ps1` issues
+  `CN=RVDesk Code Signing Authority, O=RithV Services, C=US` and exports
+  `RVDesk_Authority.cer`.
+
+### Changed
+
+- Full RVDesk rebrand of the installer and setup scripts: `installer/RVSDesk.iss`
+  defaults/publisher/install directory/Start-menu group/descriptions,
+  `installer/build_installer.ps1` branding defaults, and the legacy
+  `Install_RVSDesk.bat` elevated installer now target RVDesk by RithV Services.
+- Portable line rebranded end to end: `scripts/apply_branding.py` now injects
+  `RVDesk` / `RithV Services` and the portable workflow renames the bundle exe to
+  `RVDesk.exe`, packs `RVDesk-Portable.exe`/`RVDesk-Portable.zip`, and publishes
+  the RVDesk asset names and release titles.
+- Portable metadata stamp is now verified: the workflow fails when `rcedit`
+  returns a non-zero exit code, is missing, or when the stamped `ProductName`
+  does not read back as `RVDesk`.
+
+### Fixed
+
+- The portable `.exe` can no longer ship with a stock `ProductName` after a silent
+  `rcedit` failure, because stamping is now a hard gate with a readback check.
+
+### Notes
+
+- The portable line is built from the stock RustDesk source
+  (`https://github.com/rustdesk/rustdesk`), rebranded by `apply_branding.py`, and
+  then stamped with `rcedit`.
+- AGPL-3.0 attribution is retained: RustDesk by Purslane Tech Pte. Ltd. remains
+  credited in `Comments`, `LegalCopyright`, the README, and the in-app/licence
+  text.
 ## [1.7.0] - 2026-10-17
 
 Full Changelog: https://github.com/dnlhrth01/rvsdesk/compare/v1.6.0...v1.7.0
@@ -77,6 +118,7 @@ Full Changelog: https://github.com/dnlhrth01/rvsdesk/compare/v1.6.0...v1.7.0
 
 - Baseline release of the original 1.5.0-era RVSDesk.
 
+[1.8.0]: https://github.com/dnlhrth01/rvsdesk/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/dnlhrth01/rvsdesk/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/dnlhrth01/rvsdesk/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/dnlhrth01/rvsdesk/releases/tag/v1.5.0

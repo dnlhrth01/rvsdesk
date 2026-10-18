@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Builds RVSDesk-Setup-<version>.exe from installer\RVSDesk.iss via Inno Setup 6 (ISCC.exe).
+  Builds RVDesk-Setup-<version>.exe from installer\RVSDesk.iss via Inno Setup 6 (ISCC.exe).
 
 .DESCRIPTION
   Stages payload from ..\dist (excluding *.zip), signs payload binaries and the setup exe
@@ -36,15 +36,15 @@
   Skip signtool verify /pa checks.
 
 .PARAMETER AppName
-  Optional branded app name passed to ISCC as /DAppName. Empty = RVSDesk default.
+  Optional branded app name passed to ISCC as /DAppName. Empty = RVDesk default.
 
 .PARAMETER AppExeName
-  Optional branded payload exe name passed to ISCC as /DAppExeName. Empty = RVSDesk.exe default.
+  Optional branded payload exe name passed to ISCC as /DAppExeName. Empty = RVDesk.exe default.
   When set, the staged payload must contain this file or the build fails with exit 3.
 
 .PARAMETER OutputBaseOverride
   Optional setup exe base filename (no extension) passed to ISCC as /DOutputBase.
-  Empty = RVSDesk-Setup-<version>.
+  Empty = RVDesk-Setup-<version>.
 #>
 [CmdletBinding()]
 param(
@@ -132,7 +132,7 @@ if (-not (Test-Path -LiteralPath $PayloadSource)) {
   Write-Host "Payload source not found: $PayloadSource" -ForegroundColor Red
   exit 3
 }
-$requiredExe = "RVSDesk.exe"
+$requiredExe = "RVDesk.exe"
 if (-not [string]::IsNullOrWhiteSpace($AppExeName)) { $requiredExe = $AppExeName }
 if (-not (Test-Path -LiteralPath (Join-Path $PayloadSource $requiredExe))) {
   Write-Host "Payload source does not contain $requiredExe : $PayloadSource" -ForegroundColor Red
@@ -251,6 +251,9 @@ function Invoke-Sign([string]$FilePath, [string]$Description) {
   return $false
 }
 
+$brandName = $AppName
+if ([string]::IsNullOrWhiteSpace($brandName)) { $brandName = "RVDesk" }
+
 $signTargets = @(Get-ChildItem -LiteralPath $payloadDir -Recurse -File | Where-Object {
   $ext = $_.Extension.ToLowerInvariant()
   ($ext -eq ".exe") -or ($ext -eq ".dll") -or ($ext -eq ".ocl")
@@ -260,7 +263,7 @@ if (-not $SkipPayloadSigning) {
   Write-Step "Signing $($signTargets.Count) payload binary/binaries"
   $signFailures = @()
   foreach ($f in $signTargets) {
-    if (-not (Invoke-Sign -FilePath $f.FullName -Description "RVSDesk payload - Authenticode signed")) {
+    if (-not (Invoke-Sign -FilePath $f.FullName -Description "$brandName payload - Authenticode signed")) {
       $signFailures += $f.FullName
     }
   }
@@ -289,7 +292,7 @@ if ($LASTEXITCODE -ne 0) {
   Write-Host "ISCC compile failed (exit $LASTEXITCODE). See $isccLogPath." -ForegroundColor Red
   exit 5
 }
-$outputBaseName = "RVSDesk-Setup-$Version"
+$outputBaseName = "RVDesk-Setup-$Version"
 if (-not [string]::IsNullOrWhiteSpace($OutputBaseOverride)) { $outputBaseName = $OutputBaseOverride }
 $setupExe = Join-Path $OutputDir "$outputBaseName.exe"
 if (-not (Test-Path -LiteralPath $setupExe)) {
@@ -300,7 +303,7 @@ Write-Step "Setup built: $setupExe"
 
 if (-not $SkipSetupSigning) {
   Write-Step "Signing setup exe"
-  if (-not (Invoke-Sign -FilePath $setupExe -Description "RVSDesk Setup")) {
+  if (-not (Invoke-Sign -FilePath $setupExe -Description "$brandName Setup")) {
     Write-Host "Setup exe signing failed: $setupExe. Pass -SkipSetupSigning to skip signing." -ForegroundColor Red
     exit 6
   }

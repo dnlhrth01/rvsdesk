@@ -1,4 +1,4 @@
-name: Build RVSDesk Installer
+name: Build RVDesk Installer
 
 on:
   workflow_dispatch:
@@ -76,7 +76,7 @@ jobs:
       - name: Upload setup artifact
         uses: actions/upload-artifact@v4
         with:
-          name: RVSDesk-Setup-${{ steps.read-version.outputs.version }}
+          name: RVDesk-Setup-${{ steps.read-version.outputs.version }}
           path: installer/Output/*.exe
 
       - name: Publish setup exe to GitHub Release
@@ -84,16 +84,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Appends to the same release that build-rvsdesk.yml creates (RVSDesk-Portable.exe etc.);
+          # Appends to the same release that build-rvsdesk.yml creates (RVDesk-Portable.exe etc.);
           # different asset names so no clash.
           $isTag = ("${{ github.event_name }}" -eq "push") -and ("${{ github.ref }}" -like "refs/tags/*")
           $tag = if ($isTag) { "${{ github.ref_name }}" } else { "latest" }
           gh release view $tag *> $null
           if ($LASTEXITCODE -ne 0) {
             if ($tag -eq "latest") {
-              gh release create $tag --title "RVSDesk $tag" --generate-notes --prerelease
+              gh release create $tag --title "RVDesk $tag" --generate-notes --prerelease
             } else {
-              gh release create $tag --title "RVSDesk $tag" --generate-notes
+              gh release create $tag --title "RVDesk $tag" --generate-notes
             }
             if ($LASTEXITCODE -ne 0) {
               # A release for this tag may already exist (build-rvsdesk.yml race) - continue.

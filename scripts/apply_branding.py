@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-RVSDesk Comprehensive Branding & Isolation Injector (100% Empirically Audited)
+RVDesk Comprehensive Branding & Isolation Injector (100% Empirically Audited)
 Ensures:
 1. Complete elimination of all UAC & installation warning cards.
 2. Complete replacement of all logo variants (light, dark, default, and icon).
-3. Complete process & registry isolation so RVSDesk and RustDesk can run side-by-side without interference.
+3. Complete process & registry isolation so RVDesk and RustDesk can run side-by-side without interference.
 4. Complete removal of "For faster connection, please set up your own server" banner.
 5. Complete removal of Settings -> Account Tab.
 """
@@ -15,10 +15,10 @@ import re
 import sys
 import json
 
-APP_NAME = "RVSDesk"
-APP_DESCRIPTION = "RVSDesk - Free & Secure Portable Remote Desktop"
+APP_NAME = "RVDesk"
+APP_DESCRIPTION = "RVDesk - Free & Secure Portable Remote Desktop"
 APP_VERSION = "1.5.0"
-AUTHOR = "RVS Software"
+AUTHOR = "RithV Services"
 SERVER_HOST = "console.danialharith.space"
 SERVER_PUB_KEY = "SQ3o9WEaT4kbLZiGo6EwtIktBA2K220WPkr1tnN66IU="
 AUTH_ENDPOINT = "https://service.danialharith.space/rvsdesk-auth.json"
@@ -26,7 +26,7 @@ DEFAULT_SALT = "rvs_auth_sec_2026"
 DEFAULT_HASH = "741778e002a66a23da72acb792171d2127ff4395c248456dcb314904c6a26a6b"
 
 def apply_branding(repo_root: str, assets_dir: str):
-    print(f"[*] Applying RVSDesk branding to repository at: {repo_root}")
+    print(f"[*] Applying RVDesk branding to repository at: {repo_root}")
 
     # Muat konfigurasi autorisasi pengawal terkini jika wujud
     current_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -105,7 +105,7 @@ def apply_branding(repo_root: str, assets_dir: str):
             except Exception as e:
                 print(f"  [!] Note: Could not copy icon to {dest}: {e}")
 
-    # 2. Kemas kini libs/hbb_common/src/config.rs (APP_NAME -> RVSDesk & Matikan Account/Install di peringkat Rust)
+    # 2. Kemas kini libs/hbb_common/src/config.rs (APP_NAME -> RVDesk & Matikan Account/Install di peringkat Rust)
     if os.path.exists(config_rs):
         try:
             with open(config_rs, "r", encoding="utf-8", errors="ignore") as f:
@@ -129,7 +129,7 @@ def apply_branding(repo_root: str, assets_dir: str):
                 c_content,
                 flags=re.DOTALL
             )
-            # Kunci pelayan rasmi RVSDesk & Public Key persendirian (Bebas Login 100%)
+            # Kunci pelayan rasmi RVDesk & Public Key persendirian (Bebas Login 100%)
             c_content = c_content.replace(
                 'pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("".to_owned());',
                 f'pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("{SERVER_HOST}".to_owned());'
@@ -151,7 +151,7 @@ def apply_branding(repo_root: str, assets_dir: str):
             print(f"  [!] Note on config.rs: {e}")
 
     # 3. Pengasingan Windows Registry (src/platform/windows.rs)
-    # Tukar GUID IS1 RustDesk supaya RVSDesk tidak membaca registry RustDesk sedia ada
+    # Tukar GUID IS1 RustDesk supaya RVDesk tidak membaca registry RustDesk sedia ada
     if os.path.exists(windows_rs):
         try:
             with open(windows_rs, "r", encoding="utf-8", errors="ignore") as f:
@@ -169,7 +169,7 @@ def apply_branding(repo_root: str, assets_dir: str):
             print(f"  [!] Failed isolating windows.rs: {e}")
 
     # 4. Pengasingan Portable Launcher (libs/portable/src/main.rs)
-    # Tukar nama prefix direktori ekstrak daripada rustdesk kepada rvsdesk
+    # Tukar nama prefix direktori ekstrak daripada rustdesk kepada rvdesk
     if os.path.exists(portable_main_rs):
         try:
             with open(portable_main_rs, "r", encoding="utf-8", errors="ignore") as f:
@@ -177,12 +177,12 @@ def apply_branding(repo_root: str, assets_dir: str):
             
             port_content = port_content.replace(
                 'const APP_PREFIX: &str = "rustdesk";',
-                'const APP_PREFIX: &str = "rvsdesk";'
+                'const APP_PREFIX: &str = "rvdesk";'
             )
             
             with open(portable_main_rs, "w", encoding="utf-8") as f:
                 f.write(port_content)
-            print("  [+] Patched Portable Launcher APP_PREFIX to rvsdesk")
+            print("  [+] Patched Portable Launcher APP_PREFIX to rvdesk")
         except Exception as e:
             print(f"  [!] Failed patching portable main.rs: {e}")
 
@@ -192,7 +192,7 @@ def apply_branding(repo_root: str, assets_dir: str):
             with open(runner_rc, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             content = content.replace("RustDesk", APP_NAME)
-            content = content.replace("rustdesk", "rvsdesk")
+            content = content.replace("rustdesk", "rvdesk")
             with open(runner_rc, "w", encoding="utf-8") as f:
                 f.write(content)
             print("  [+] Patched Flutter Runner.rc (Version & Window Properties)")
@@ -264,7 +264,7 @@ def apply_branding(repo_root: str, assets_dir: str):
             
             auth_injected_logic = f'''{state_class_header}
   // =========================================================================
-  // RVSDesk Controller Authorization State & Logic
+  // RVDesk Controller Authorization State & Logic
   // =========================================================================
   static const String _rvsAuthEndpoint = "{auth_endpoint}";
   static const String _rvsFallbackSalt = "{auth_salt}";
@@ -398,7 +398,7 @@ def apply_branding(repo_root: str, assets_dir: str):
       await bind.mainSetLocalOption(key: _rvsLocalAuthKey, value: targetHash);
       _isControllerAuthorized.value = true;
       _authPasswordController.clear();
-      showToast("RVSDesk controller successfully unlocked!");
+      showToast("RVDesk controller successfully unlocked!");
     }} else {{
       _authError.value = "Invalid password! Access denied.";
     }}
@@ -433,7 +433,7 @@ def apply_branding(repo_root: str, assets_dir: str):
           ),
           const SizedBox(height: 8),
           Text(
-            "This RVSDesk server is restricted to authorized technicians only. Please enter the controller secret password to initiate an outgoing remote session.",
+            "This RVDesk server is restricted to authorized technicians only. Please enter the controller secret password to initiate an outgoing remote session.",
             style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.8)),
             textAlign: TextAlign.center,
           ),
@@ -627,7 +627,7 @@ def apply_branding(repo_root: str, assets_dir: str):
                 flags=re.DOTALL | re.MULTILINE
             )
 
-            # Terapkan Tema Warna Rasmi RVSDesk (Crimson Red / Cyber Red #DC2626)
+            # Terapkan Tema Warna Rasmi RVDesk (Crimson Red / Cyber Red #DC2626)
             cd_text = cd_text.replace(
                 "static const Color accent = Color(0xFF0071FF);",
                 "static const Color accent = Color(0xFFDC2626);"
@@ -652,7 +652,7 @@ def apply_branding(repo_root: str, assets_dir: str):
             with open(common_dart, "w", encoding="utf-8") as f:
                 f.write(cd_text)
             print("  [+] Stripped 'Powered by RustDesk' from common.dart")
-            print("  [+] Applied RVSDesk Crimson Red Theme (#DC2626) to common.dart")
+            print("  [+] Applied RVDesk Crimson Red Theme (#DC2626) to common.dart")
         except Exception as e:
             print(f"  [!] Failed patching common.dart: {e}")
 
@@ -676,7 +676,7 @@ def apply_branding(repo_root: str, assets_dir: str):
         print("  [+] Patched all language dictionary files (Branding Cleaned)")
 
     # 12. Kemas kini Metadata Binary & Windows FileDescription (Cargo.toml & libs/portable/Cargo.toml)
-    # Menukar 'FileDescription' dan 'ProductName' kepada RVSDesk tetapi MENGEKALKAN kredit hak cipta Purslane Tech Pte. Ltd. mengikut syarat lesen AGPL-3.0
+    # Menukar 'FileDescription' dan 'ProductName' kepada RVDesk tetapi MENGEKALKAN kredit hak cipta Purslane Tech Pte. Ltd. mengikut syarat lesen AGPL-3.0
     cargo_root = os.path.join(repo_root, "Cargo.toml")
     if os.path.exists(cargo_root):
         try:
@@ -684,11 +684,11 @@ def apply_branding(repo_root: str, assets_dir: str):
                 cargo_text = f.read()
             cargo_text = cargo_text.replace('FileDescription = "RustDesk Remote Desktop"', f'FileDescription = "{APP_NAME} Remote Desktop"')
             cargo_text = cargo_text.replace('ProductName = "RustDesk"', f'ProductName = "{APP_NAME}"')
-            cargo_text = cargo_text.replace('OriginalFilename = "rustdesk.exe"', 'OriginalFilename = "rvsdesk.exe"')
+            cargo_text = cargo_text.replace('OriginalFilename = "rustdesk.exe"', 'OriginalFilename = "RVDesk.exe"')
             cargo_text = cargo_text.replace('description = "RustDesk Remote Desktop"', f'description = "{APP_NAME} Remote Desktop"')
             with open(cargo_root, "w", encoding="utf-8") as f:
                 f.write(cargo_text)
-            print("  [+] Patched root Cargo.toml (FileDescription & ProductName updated to RVSDesk, License Credit Preserved)")
+            print("  [+] Patched root Cargo.toml (FileDescription & ProductName updated to RVDesk, License Credit Preserved)")
         except Exception as e:
             print(f"  [!] Note on root Cargo.toml: {e}")
 
@@ -700,7 +700,7 @@ def apply_branding(repo_root: str, assets_dir: str):
             p_cargo_text = p_cargo_text.replace('description = "RustDesk Remote Desktop"', f'description = "{APP_NAME} Remote Desktop"')
             with open(portable_cargo, "w", encoding="utf-8") as f:
                 f.write(p_cargo_text)
-            print("  [+] Patched libs/portable/Cargo.toml (Description updated to RVSDesk Remote Desktop)")
+            print("  [+] Patched libs/portable/Cargo.toml (Description updated to RVDesk Remote Desktop)")
         except Exception as e:
             print(f"  [!] Note on libs/portable/Cargo.toml: {e}")
 
@@ -733,7 +733,7 @@ def apply_branding(repo_root: str, assets_dir: str):
                 except Exception:
                     pass
 
-    print("[*] RVSDesk branding & complete isolation successfully applied!")
+    print("[*] RVDesk branding & complete isolation successfully applied!")
 
 if __name__ == "__main__":
     current_dir = os.path.dirname(os.path.abspath(__file__))

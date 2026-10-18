@@ -1,8 +1,8 @@
-# RVSDesk Installer
+# RVDesk Installer
 
 ## Purpose
 
-Standard Windows `.exe` setup for RVSDesk built with Inno Setup 6, replacing the hand-rolled
+Standard Windows `.exe` setup for RVDesk built with Inno Setup 6, replacing the hand-rolled
 batch installer for end users: versioned, upgradable, maintainable.
 
 ## Why Inno Setup
@@ -19,7 +19,7 @@ exe), and Advanced Installer (commercial) were all heavier or paid for this use 
 - `RVSDesk.iss` - installer definition (Inno Setup 6 script).
 - `VERSION` - single source of truth for the version, format `x.y.z`.
 - `build_installer.ps1` - build, sign, and verify pipeline.
-- `Output\\` - build artifacts (`RVSDesk-Setup-<version>.exe`, ISCC log); gitignore-able.
+- `Output\\` - build artifacts (`RVDesk-Setup-<version>.exe`, ISCC log); gitignore-able.
 - `build\\` - payload staging directory; gitignored.
 
 ## Prerequisites
@@ -41,7 +41,7 @@ PowerShell, from the repo root or the `installer` folder:
 powershell -ExecutionPolicy Bypass -File installer\build_installer.ps1
 ```
 
-Result: `installer\Output\RVSDesk-Setup-<version>.exe`.
+Result: `installer\Output\RVDesk-Setup-<version>.exe`.
 Useful switches and environment variables:
 
 - `-Version 1.7.0` override `VERSION` for this run.
@@ -57,7 +57,7 @@ missing or payload signing failed, `5` compile failed, `6` setup signing/verific
 2. Bump `installer\VERSION` (semver `x.y.z`).
 3. Run `build_installer.ps1`.
 4. Smoke-test the setup on a clean VM: install, upgrade-over-old, uninstall.
-5. Publish `RVSDesk-Setup-<version>.exe` as a GitHub Release.
+5. Publish `RVDesk-Setup-<version>.exe` as a GitHub Release.
 
 Nothing else needs redoing: only `VERSION` and the binaries change - the `.iss` never changes for
 routine releases. The fixed `AppId` means installing the new setup automatically uninstalls the
@@ -68,7 +68,7 @@ a newer install is blocked by the `[Code]` downgrade guard.
 
 - `VERSION` holds the user-facing version as `x.y.z`.
 - The build derives `x.y.z.0` (padded to 4 parts) for the Windows `VersionInfo*` fields.
-- The output filename embeds the version: `RVSDesk-Setup-<version>.exe`.
+- The output filename embeds the version: `RVDesk-Setup-<version>.exe`.
 
 ## Signing
 
@@ -87,7 +87,7 @@ freshly generated payload (`scripts/build_rvdesk_payload.ps1`, run as its own CI
 the build step) and publishes `RVDesk-Setup-<version>.exe` to a GitHub Release:
 
 - On a `v*` tag push: builds `RVDesk-Setup-<tag-version>.exe` (tag minus the leading `v`) and
-  appends it to that version's Release, next to the `RVSDesk-Portable.exe` that
+  appends it to that version's Release, next to the `RVDesk-Portable.exe` that
   `build-rvsdesk.yml` publishes there.
 - On manual `workflow_dispatch`: builds with the input version, or the committed `installer\VERSION`
   when the input is empty, and publishes to the rolling prerelease tagged `latest`.
@@ -114,9 +114,9 @@ are deprecated (stale payload - see docs/RVDesk-Installer-RE.md); use the RVDesk
 
 ## Uninstall and upgrade behavior for end users
 
-- Standard Add/Remove Programs entry named `RVSDesk`, desktop icon optional (unchecked by default).
+- Standard Add/Remove Programs entry named `RVDesk`, desktop icon optional (unchecked by default).
 - Upgrade in place: run the newer setup, the old version is removed automatically and the install
   directory is reused.
 - Uninstall removes program files; `UninstallDelete` cleans the `logs` folder and `*.log`.
-- Logs also live in `%ProgramData%\RVSDesk\logs` (written by the app/batch tooling, not the
+- Logs also live in `%ProgramData%\RVDesk\logs` (written by the app/batch tooling, not the
   installer).

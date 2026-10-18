@@ -1,4 +1,4 @@
-; RVSDesk Inno Setup script
+; RVDesk Inno Setup script
 ;
 ; Built by build_installer.ps1 (preferred), or manually:
 ;   ISCC.exe /DAppVersion=x.y.z /DAppVersionQuad=x.y.z.w /DPayloadDir=... /DOutputDir=... RVSDesk.iss
@@ -21,15 +21,23 @@
 #endif
 
 #ifndef OutputBase
-  #define OutputBase "RVSDesk-Setup-" + AppVersion
+  #define OutputBase "RVDesk-Setup-" + AppVersion
 #endif
 
 #ifndef AppName
-  #define AppName "RVSDesk"
+  #define AppName "RVDesk"
 #endif
 
 #ifndef AppExeName
-  #define AppExeName "RVSDesk.exe"
+  #define AppExeName "RVDesk.exe"
+#endif
+
+#ifndef AppPublisher
+  #define AppPublisher "RithV Services"
+#endif
+
+#ifndef AppDirName
+  #define AppDirName "RVDesk"
 #endif
 
 #ifndef PrivReq
@@ -40,10 +48,11 @@
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=RVS Software
+AppPublisher={#AppPublisher}
+; AppId is intentionally unchanged for upgrade continuity (existing installs upgrade in place).
 AppId={{3D92DD6B-C0B8-464B-BC15-795B5425B4D0}
-DefaultDirName={autopf}\RVSDesk
-DefaultGroupName=RVSDesk
+DefaultDirName={autopf}\{#AppDirName}
+DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired={#PrivReq}
 ArchitecturesAllowed=x64compatible
@@ -61,8 +70,8 @@ VersionInfoVersion={#AppVersionQuad}
 VersionInfoProductVersion={#AppVersionQuad}
 VersionInfoTextVersion={#AppVersionQuad}
 VersionInfoProductTextVersion={#AppVersion}
-VersionInfoCompany=RVS Software
-VersionInfoDescription=RVSDesk Setup
+VersionInfoCompany={#AppPublisher}
+VersionInfoDescription={#AppName} Setup
 CloseApplications=yes
 RestartApplications=yes
 UsePreviousAppDir=yes
@@ -77,11 +86,11 @@ Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Comment: "RVSDesk remote desktop"
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Comment: "{#AppName} remote desktop"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Launch RVSDesk"; Flags: nowait postinstall skipifsilent unchecked; WorkingDir: "{app}"
+Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent unchecked; WorkingDir: "{app}"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\logs"
@@ -143,7 +152,7 @@ var
 begin
   Prev := GetPreviousData('AppVersion', '' );
   if (Prev <> '') and (CompareVer(Prev, '{#AppVersion}') > 0) then
-    Result := 'A newer version of RVSDesk (' + Prev + ') is already installed. Downgrading is not supported.'
+    Result := 'A newer version of {#AppName} (' + Prev + ') is already installed. Downgrading is not supported.'
   else
     Result := '';
 end;

@@ -1,13 +1,14 @@
 # Builds the corrected RVDesk-branded payload in-repo (CI step / local use).
 # Ported from re_work\rebrand\_build.ps1 (the proven reference implementation):
 # copy stock engine -> strip Authenticode -> rcedit resource rebrand -> stage trust files.
+# Staged trust files: RVDesk_Authority.cer + Setup_Trust_RVDesk.bat.
 param(
   [string]$SourceEngine = (Join-Path $PSScriptRoot '..\dist\engine_base.exe'),
   [string]$OutputDir = (Join-Path $PSScriptRoot '..\build_rvdesk_payload'),
   [string]$Rcedit = (Join-Path $PSScriptRoot 'rcedit-x64.exe'),
   [string]$Icon = (Join-Path $PSScriptRoot '..\assets\rvsdesk.ico'),
-  [string]$TrustCert = (Join-Path $PSScriptRoot '..\dist\RVSDesk_Authority.cer'),
-  [string]$TrustBat = (Join-Path $PSScriptRoot '..\dist\Setup_Trust_RVSDesk.bat')
+  [string]$TrustCert = (Join-Path $PSScriptRoot '..\assets\RVDesk_Authority.cer'),
+  [string]$TrustBat = (Join-Path $PSScriptRoot '..\assets\Setup_Trust_RVDesk.bat')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,6 +22,16 @@ $Icon = [System.IO.Path]::GetFullPath($Icon)
 $TrustCert = [System.IO.Path]::GetFullPath($TrustCert)
 $TrustBat = [System.IO.Path]::GetFullPath($TrustBat)
 
+# Fallback: until assets\RVDesk_Authority.cer is minted, reuse the legacy
+# dist\RVSDesk_Authority.cer input so local/CI builds keep working.
+if (-not (Test-Path -LiteralPath $TrustCert)) {
+  $legacyCert = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\dist\RVSDesk_Authority.cer'))
+  if (Test-Path -LiteralPath $legacyCert) {
+    $TrustCert = $legacyCert
+    Log "trust cert fallback: $TrustCert"
+  }
+}
+
 foreach ($p in @($SourceEngine, $Rcedit, $Icon, $TrustCert, $TrustBat)) {
   if (-not (Test-Path -LiteralPath $p)) {
     Write-Host "[payload] missing required input: $p"
@@ -28,6 +39,8 @@ foreach ($p in @($SourceEngine, $Rcedit, $Icon, $TrustCert, $TrustBat)) {
   }
 }
 Log "inputs validated"
+Log ("trust cert source: {0}" -f $TrustCert)
+Log ("trust bat source: {0}" -f $TrustBat)
 
 if (Test-Path -LiteralPath $OutputDir) { Remove-Item -LiteralPath $OutputDir -Recurse -Force }
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
@@ -88,9 +101,11 @@ if ($rcCode -ne 0) {
   exit 1
 }
 
-Copy-Item -LiteralPath $TrustCert -Destination $OutputDir -Force
-Copy-Item -LiteralPath $TrustBat -Destination $OutputDir -Force
-Log ("copied trust files: {0}, {1}" -f (Split-Path -Leaf $TrustCert), (Split-Path -Leaf $TrustBat))
+$stagedCert = Join-Path $OutputDir 'RVDesk_Authority.cer'
+$stagedBat = Join-Path $OutputDir 'Setup_Trust_RVDesk.bat'
+Copy-Item -LiteralPath $TrustCert -Destination $stagedCert -Force
+Copy-Item -LiteralPath $TrustBat -Destination $stagedBat -Force
+Log ("copied trust files: {0}, {1}" -f (Split-Path -Leaf $stagedCert), (Split-Path -Leaf $stagedBat))
 
 $vi = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
 Log ("verify VersionInfo: CompanyName='{0}' ProductName='{1}' OriginalFilename='{2}'" -f $vi.CompanyName, $vi.ProductName, $vi.OriginalFilename)
