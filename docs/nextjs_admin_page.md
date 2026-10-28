@@ -1,6 +1,6 @@
-# 🌐 Next.js Controller Password Manager Setup Guide for `service.danialharith.space`
+# 🌐 Next.js Controller Password Manager Setup Guide for `rithvservices.my.id`
 
-This document provides a step-by-step guide to installing the web-based Administrator page into your Next.js project at `service.danialharith.space`. This page allows you to generate and update the controller secret password directly from any web browser (mobile or desktop).
+This document provides a step-by-step guide to installing the web-based Administrator page into your Next.js project at `rithvservices.my.id`. This page allows you to generate and update the controller secret password directly from any web browser (mobile or desktop).
 
 ---
 
@@ -19,7 +19,7 @@ We have prepared a ready-to-use Next.js module in:
 ## 🚀 Installation Steps (2 Minutes)
 
 ### Step 1: Copy Files into Your Next.js Project
-Open your Next.js project for `service.danialharith.space`, and copy the 2 files according to the App Router structure:
+Open your Next.js project for `rithvservices.my.id`, and copy the 2 files according to the App Router structure:
 
 ```text
 your-nextjs-project/
@@ -45,7 +45,7 @@ RVS_ADMIN_PIN=YourSecretPin123
 ---
 
 ### Step 3: Deploy or Start Your Server
-Push to GitHub or deploy to `service.danialharith.space`:
+Push to GitHub or deploy to `rithvservices.my.id`:
 ```bash
 git add .
 git commit -m "feat: add RVSDesk controller secret password manager page"
@@ -57,7 +57,7 @@ git push
 ## 🖥️ How to Use the Admin Page
 
 1. Open your browser and navigate to:
-   👉 **`https://service.danialharith.space/rvsdesk-admin`**
+   👉 **`https://rithvservices.my.id/rvsdesk-admin`**
 
 2. You will see the RVSDesk Relay Security dashboard:
    - **Current Status**: Displays active hash and version.
@@ -66,5 +66,5 @@ git push
    - **Update**: Click **"🚀 Update Secret Password Now"**.
 
 3. **Done!**
-   - `https://service.danialharith.space/rvsdesk-auth.json` is instantly updated with the new hash.
+   - `https://rithvservices.my.id/rvsdesk-auth.json` is instantly updated with the new hash.
    - All **RVSDesk.exe** controllers worldwide will immediately enforce this new password before allowing remote control sessions!

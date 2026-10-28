@@ -105,8 +105,8 @@ To ensure your private relay server (`console.danialharith.space`) is protected 
    - The right control panel is guarded by the technician authorization card.
 2. **Change Secret Password Dynamically Without Rebuilding .exe**:
    - Passwords are dynamically validated against your server endpoint:
-     `https://service.danialharith.space/rvsdesk-auth.json`
-   - Use the Next.js admin page at `https://service.danialharith.space/rvsdesk-admin` or the CLI:
+     `https://rithvservices.my.id/rvsdesk-auth.json`
+   - Use the Next.js admin page at `https://rithvservices.my.id/rvsdesk-admin` or the CLI:
      ```powershell
      python scripts/set_secret_password.py
      ```

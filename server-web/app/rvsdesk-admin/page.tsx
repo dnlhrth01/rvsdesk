@@ -133,7 +133,7 @@ export default function RVSDeskAdminPage() {
         <div style={styles.statusBox}>
           <div style={styles.statusRow}>
             <span style={styles.statusLabel}>Active Endpoint:</span>
-            <span style={styles.statusValue}>https://service.danialharith.space/rvsdesk-auth.json</span>
+            <span style={styles.statusValue}>https://rithvservices.my.id/rvsdesk-auth.json</span>
           </div>
           <div style={styles.statusRow}>
             <span style={styles.statusLabel}>Current Hash:</span>

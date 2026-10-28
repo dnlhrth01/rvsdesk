@@ -1,7 +1,7 @@
 # 🔐 RVSDesk Authorization Server Configuration Guide
-**Hosted at `https://service.danialharith.space/rvsdesk-auth.json`**
+**Hosted at `https://rithvservices.my.id/rvsdesk-auth.json`**
 
-This document explains how to deploy and update the controller secret authorization file (`rvsdesk-auth.json`) on your Next.js web server at `service.danialharith.space`.
+This document explains how to deploy and update the controller secret authorization file (`rvsdesk-auth.json`) on your Next.js web server at `rithvservices.my.id`.
 
 ---
 
@@ -15,7 +15,7 @@ To prevent unauthorized users who have copies of `RVSDesk.exe` from abusing your
 
 ## 🚀 Method 1: Next.js Static File (Simplest)
 
-If your website `service.danialharith.space` is built with Next.js:
+If your website `rithvservices.my.id` is built with Next.js:
 
 1. Open your Next.js project directory on your computer or server.
 2. Copy [rvsdesk-auth.json](file:///c:/Users/User/.gemini/antigravity-ide/scratch/rvsdesk/config/rvsdesk-auth.json) from this repository into your `public/` directory:
@@ -26,7 +26,7 @@ If your website `service.danialharith.space` is built with Next.js:
    ```
 3. Push or deploy the changes to your server.
 4. Verify in your web browser by navigating to:
-   `https://service.danialharith.space/rvsdesk-auth.json`
+   `https://rithvservices.my.id/rvsdesk-auth.json`
    (Confirm you see the JSON hash payload).
 
 ---
@@ -47,7 +47,7 @@ export async function GET() {
   return NextResponse.json(
     {
       app_name: "RVSDesk",
-      endpoint: "https://service.danialharith.space/rvsdesk-auth.json",
+      endpoint: "https://rithvservices.my.id/rvsdesk-auth.json",
       secret_hash: secretHash,
       salt: salt,
       version: 1,
@@ -75,5 +75,5 @@ Whenever you want to rotate or update the secret password:
    *(Or specify directly: `python scripts/set_secret_password.py --password "NewSecretPass123!"`)*
 
 2. The script computes the salted SHA-256 hash and updates `config/rvsdesk-auth.json`.
-3. Copy the updated `config/rvsdesk-auth.json` to your `service.danialharith.space` server.
+3. Copy the updated `config/rvsdesk-auth.json` to your `rithvservices.my.id` server.
 4. **Done!** Any cached controller authorization expires immediately, and all RVSDesk applications will enforce the new secret password.

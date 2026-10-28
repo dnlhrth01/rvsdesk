@@ -21,7 +21,7 @@ APP_VERSION = "1.5.0"
 AUTHOR = "RithV Services"
 SERVER_HOST = "console.danialharith.space"
 SERVER_PUB_KEY = "SQ3o9WEaT4kbLZiGo6EwtIktBA2K220WPkr1tnN66IU="
-AUTH_ENDPOINT = "https://service.danialharith.space/rvsdesk-auth.json"
+AUTH_ENDPOINT = "https://rithvservices.my.id/rvsdesk-auth.json"
 DEFAULT_SALT = "rvs_auth_sec_2026"
 DEFAULT_HASH = "741778e002a66a23da72acb792171d2127ff4395c248456dcb314904c6a26a6b"
 

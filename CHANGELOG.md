@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-10-28
+
+Full Changelog: https://github.com/dnlhrth01/rvsdesk/compare/v1.8.0...v1.9.0
+
+### Changed
+
+- Controller-auth endpoint moved to `https://rithvservices.my.id/rvsdesk-auth.json`
+  (admin page `/rvsdesk-admin`); relay/rendezvous unchanged
+  (`console.danialharith.space`); new portable build required - binaries with the
+  old auth host stop authorising once `service.danialharith.space` is retired.
+
+### Added
+
+- CI gate that fails the portable build if the auth host is missing/stale, plus
+  build-time verification.
+
 ## [1.8.0] - 2026-10-18
 
 Full Changelog: https://github.com/dnlhrth01/rvsdesk/compare/v1.7.0...v1.8.0

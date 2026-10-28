@@ -41,7 +41,7 @@ def update_secret_password(password: str, salt: str = None) -> dict:
 
     payload = {
         "app_name": "RVSDesk",
-        "endpoint": "https://service.danialharith.space/rvsdesk-auth.json",
+        "endpoint": "https://rithvservices.my.id/rvsdesk-auth.json",
         "secret_hash": secret_hash,
         "salt": used_salt,
         "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -96,8 +96,8 @@ def main():
     print("=" * 60)
     print("\n[NEXT STEPS]")
     print("1. Upload 'config/rvsdesk-auth.json' to your server at:")
-    print("   https://service.danialharith.space/rvsdesk-auth.json")
-    print("   (Example: Copy this file into your Next.js project's 'public/' directory on service.danialharith.space)")
+    print("   https://rithvservices.my.id/rvsdesk-auth.json")
+    print("   (Example: Copy this file into your Next.js project's 'public/' directory on rithvservices.my.id)")
     print("2. All distributed RVSDesk client binaries will immediately use this new password!")
 
 if __name__ == "__main__":

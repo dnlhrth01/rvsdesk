@@ -162,7 +162,21 @@ jobs:
           } else {
             Write-Error "Flutter Windows release bundle was not found!"
           }
-          
+
+      - name: Verify Auth Host in Built RVDesk.exe
+        shell: powershell
+        run: |
+          $exe = "rustdesk_bundle\RVDesk.exe"
+          if (-not (Test-Path $exe)) { throw "built exe not found at $exe" }
+          $s = [Text.Encoding]::GetEncoding(28591).GetString([IO.File]::ReadAllBytes((Resolve-Path $exe).Path))
+          if ($s -notmatch 'rithvservices\.my\.id') { throw 'auth host missing from built exe' }
+          if ($s -match 'service\.danialharith\.space') { throw 'old auth host still present' }
+          Write-Host "PASS: auth host rithvservices.my.id present in $exe; no stale service.danialharith.space"
+
+      - name: Pack Single-File Portable Executable
+        shell: powershell
+        run: |
+          cd engine
           # 3. Jana fail tunggal portable .exe menggunakan alat pemaket rasmi (menyasarkan RVDesk.exe)
           cd libs/portable
           python generate.py -f ../../../rustdesk_bundle -o . -e RVDesk.exe

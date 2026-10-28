@@ -46,7 +46,7 @@ export async function GET() {
   return NextResponse.json(
     {
       app_name: 'RVSDesk',
-      endpoint: 'https://service.danialharith.space/rvsdesk-auth.json',
+      endpoint: 'https://rithvservices.my.id/rvsdesk-auth.json',
       secret_hash: authData.secret_hash,
       salt: authData.salt,
       version: authData.version,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     const newAuthPayload = {
       app_name: 'RVSDesk',
-      endpoint: 'https://service.danialharith.space/rvsdesk-auth.json',
+      endpoint: 'https://rithvservices.my.id/rvsdesk-auth.json',
       secret_hash: secretHash,
       salt: salt,
       version: newVersion,
