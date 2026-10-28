@@ -163,15 +163,23 @@ jobs:
             Write-Error "Flutter Windows release bundle was not found!"
           }
 
-      - name: Verify Auth Host in Built RVDesk.exe
+      - name: Verify Auth Host in Built Bundle
         shell: powershell
         run: |
-          $exe = "rustdesk_bundle\RVDesk.exe"
-          if (-not (Test-Path $exe)) { throw "built exe not found at $exe" }
-          $s = [Text.Encoding]::GetEncoding(28591).GetString([IO.File]::ReadAllBytes((Resolve-Path $exe).Path))
-          if ($s -notmatch 'rithvservices\.my\.id') { throw 'auth host missing from built exe' }
-          if ($s -match 'service\.danialharith\.space') { throw 'old auth host still present' }
-          Write-Host "PASS: auth host rithvservices.my.id present in $exe; no stale service.danialharith.space"
+          $bundle = Get-ChildItem -Path . -Recurse -Directory -Filter rustdesk_bundle -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $bundle) { throw "rustdesk_bundle directory not found" }
+          $enc = [Text.Encoding]::GetEncoding(28591)
+          $newHits = @(); $oldHits = @(); $scanned = 0
+          Get-ChildItem -Path $bundle.FullName -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+            $scanned++
+            $s = $enc.GetString([IO.File]::ReadAllBytes($_.FullName))
+            if ($s -match 'rithvservices\.my\.id') { $newHits += $_.FullName }
+            if ($s -match 'service\.danialharith\.space') { $oldHits += $_.FullName }
+          }
+          Write-Host "scanned $scanned files under $($bundle.FullName)"
+          if ($newHits.Count -eq 0) { throw "auth host rithvservices.my.id missing from built bundle" }
+          if ($oldHits.Count -gt 0) { throw ("old auth host service.danialharith.space still present in: " + ($oldHits -join ', ')) }
+          Write-Host ("PASS: new auth host present in: " + (($newHits | ForEach-Object { $_ }) -join ', '))
 
       - name: Pack Single-File Portable Executable
         shell: powershell
