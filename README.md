@@ -18,12 +18,18 @@ All official builds are published at:
 
 | Asset | Description |
 |---|---|
+| `RVDesk-Downloader.bat` | 🚀 **Official Installer (Recommended)**: 1-Click Silent Smart Downloader & Launcher (Bypasses SmartScreen without prompts). |
 | `RVDesk-Setup-<version>.exe` | Inno Setup installer (signed when the signing secrets are configured). |
 | `RVDesk-Portable.exe` | Single-file portable build - no installation required. |
-| `RVDesk-Portable.zip` | Portable bundle: `RVDesk.exe`, `Setup_Trust_RVDesk.bat`, `RVDesk-Launcher.bat`, and `RVDesk_Authority.cer`. |
+| `RVDesk-Portable.zip` | Portable bundle: `RVDesk.exe`, `Setup_Trust_RVDesk.bat`, `RVDesk-Launcher.bat`, `RVDesk-Downloader.bat`, and `RVDesk_Authority.cer`. |
 | `Setup_Trust_RVDesk.bat` | One-click helper that trusts `RVDesk_Authority.cer` and clears the Mark of the Web. |
 | `RVDesk-Launcher.bat` | SmartScreen-friendly launcher for the bundled `RVDesk.exe`. |
 | `RVDesk_Authority.cer` | Public self-signed code-signing certificate for the portable line. |
+
+> **Official Installer (Anti-SmartScreen Quick Start)**:
+> Download `RVDesk-Downloader.bat` directly from the release page and run it. It fetches the official binary directly via GitHub API, clears the Mark-of-the-Web (Zone.Identifier) stream, registers certificate trust silently, and launches RVDesk immediately without Windows SmartScreen blocks.
+>
+> 💬 **Bantuan & Support**: Jika anda mengalami sebarang isu pemasangan atau sambungan, hubungi pasukan rasmi di **`rithvservices@gmail.com`**.
 
 > The portable line is built from the stock RustDesk source, rebranded by `scripts/apply_branding.py`, then stamped with `rcedit` and verified (`ProductName` must read `RVDesk`). AGPL-3.0 attribution is retained in the binary metadata.
 

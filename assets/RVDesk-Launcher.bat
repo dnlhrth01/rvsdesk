@@ -9,8 +9,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Test-Path '.\RVDesk.
 if exist "RVDesk.exe" (
     start "" "RVDesk.exe" %*
 ) else (
-    echo [!] RVDesk.exe was not found in this folder.
-    pause
-    exit /b 1
+    if exist "RVDesk-Downloader.bat" (
+        echo [i] RVDesk.exe not found. Launching downloader...
+        call "RVDesk-Downloader.bat" %*
+    ) else (
+        echo [!] RVDesk.exe was not found in this folder.
+        pause
+        exit /b 1
+    )
 )
 exit /b 0

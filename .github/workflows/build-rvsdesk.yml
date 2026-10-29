@@ -265,6 +265,7 @@ jobs:
             New-Item -ItemType Directory -Path "pkg" -Force | Out-Null
             Copy-Item "RVDesk-Portable.exe" -Destination "pkg\RVDesk.exe"
             Copy-Item "assets\RVDesk-Launcher.bat" -Destination "pkg\RVDesk-Launcher.bat"
+            if (Test-Path "assets\RVDesk-Downloader.bat") { Copy-Item "assets\RVDesk-Downloader.bat" -Destination "pkg\RVDesk-Downloader.bat" }
             if (Test-Path "assets\Setup_Trust_RVDesk.bat") { Copy-Item "assets\Setup_Trust_RVDesk.bat" -Destination "pkg\Setup_Trust_RVDesk.bat" }
             if (Test-Path "assets\RVDesk_Authority.cer") { Copy-Item "assets\RVDesk_Authority.cer" -Destination "pkg\RVDesk_Authority.cer" }
             Compress-Archive -Path "pkg\*" -DestinationPath "RVDesk-Portable.zip" -Force
@@ -279,6 +280,7 @@ jobs:
             RVDesk-Portable.zip
             assets/Setup_Trust_RVDesk.bat
             assets/RVDesk-Launcher.bat
+            assets/RVDesk-Downloader.bat
             assets/RVDesk_Authority.cer
           if-no-files-found: error
 
@@ -292,6 +294,7 @@ jobs:
             RVDesk-Portable.zip
             assets/Setup_Trust_RVDesk.bat
             assets/RVDesk-Launcher.bat
+            assets/RVDesk-Downloader.bat
             assets/RVDesk_Authority.cer
           draft: false
           prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
