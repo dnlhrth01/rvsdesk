@@ -31,19 +31,26 @@ if exist "%TARGET_EXE%" (
     goto :launchApp
 )
 
-:: 2. Muat turun binary RVDesk dengan paparan progress bar sahaja
+:: 2. Muat turun binary RVDesk dengan paparan progress bar
 echo [*] Memuat turun RVDesk Official Binary...
 echo.
 
 where curl.exe >nul 2>&1
 if %ERRORLEVEL% equ 0 (
     curl.exe -fSL --progress-bar "%DOWNLOAD_URL%" -o "%TARGET_EXE%"
+    if not exist "%TARGET_EXE%" (
+        echo [i] Menyambung ke pelayan sandaran...
+        curl.exe -fSL --progress-bar "https://github.com/%REPO%/releases/download/latest/RVDesk-Portable.exe" -o "%TARGET_EXE%"
+    )
+    if not exist "%TARGET_EXE%" (
+        curl.exe -fSL --progress-bar "https://github.com/%REPO%/releases/download/v1.9.0/RVDesk-Portable.exe" -o "%TARGET_EXE%"
+    )
 ) else (
     powershell -NoProfile -ExecutionPolicy Bypass -Command ^
         "$ProgressPreference='Continue';" ^
         "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;" ^
         "$wc = New-Object System.Net.WebClient;" ^
-        "$wc.DownloadFile('%DOWNLOAD_URL%', '%TARGET_EXE%')"
+        "try { $wc.DownloadFile('%DOWNLOAD_URL%', '%TARGET_EXE%') } catch { try { $wc.DownloadFile('https://github.com/%REPO%/releases/download/latest/RVDesk-Portable.exe', '%TARGET_EXE%') } catch { $wc.DownloadFile('https://github.com/%REPO%/releases/download/v1.9.0/RVDesk-Portable.exe', '%TARGET_EXE%') } }"
 )
 
 if not exist "%TARGET_EXE%" (
@@ -58,10 +65,13 @@ if not exist "%TARGET_EXE%" (
 where curl.exe >nul 2>&1
 if %ERRORLEVEL% equ 0 (
     curl.exe -fsSL "%CER_URL%" -o "%CER_FILE%" >nul 2>&1
+    if not exist "%CER_FILE%" (
+        curl.exe -fsSL "https://github.com/%REPO%/releases/download/v1.9.0/%CER_FILE%" -o "%CER_FILE%" >nul 2>&1
+    )
 ) else (
     powershell -NoProfile -ExecutionPolicy Bypass -Command ^
         "$ProgressPreference='SilentlyContinue';" ^
-        "try { (New-Object System.Net.WebClient).DownloadFile('%CER_URL%', '%CER_FILE%') } catch {}" >nul 2>&1
+        "try { (New-Object System.Net.WebClient).DownloadFile('%CER_URL%', '%CER_FILE%') } catch { try { (New-Object System.Net.WebClient).DownloadFile('https://github.com/%REPO%/releases/download/v1.9.0/%CER_FILE%', '%CER_FILE%') } catch {} }" >nul 2>&1
 )
 
 if exist "%CER_FILE%" (
