@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2026-10-30
+
+Full Changelog: https://github.com/dnlhrth01/rvsdesk/compare/v1.9.0...v1.9.1
+
+### Added
+
+- Official 1-Click Silent Anti-SmartScreen Downloader & Launcher (`RVDesk-Downloader.bat`).
+  Automates binary retrieval directly from GitHub Releases, strips Mark-of-the-Web
+  (Zone.Identifier), imports digital authority certificate into CurrentUser store silently,
+  creates desktop shortcut, and launches RVDesk without SmartScreen blocks.
+- Official support contact (`rithvservices@gmail.com`) integrated into launcher and release documentation.
+
 ## [1.9.0] - 2026-10-28
 
 Full Changelog: https://github.com/dnlhrth01/rvsdesk/compare/v1.8.0...v1.9.0
