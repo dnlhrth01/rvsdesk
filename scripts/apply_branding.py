@@ -231,10 +231,46 @@ def apply_branding(repo_root: str, assets_dir: str):
             with open(desktop_home_page, "r", encoding="utf-8", errors="ignore") as f:
                 hp_text = f.read()
             
-            # Matikan terus buildHelpCards supaya tiada kad amaran/install dipaparkan
+            # Suntik kad panduan rasmi sokongan jarak jauh pelanggan ke dalam buildHelpCards
+            help_card_widget = """Widget buildHelpCards(String updateUrl) {
+    return Container(
+      margin: const EdgeInsets.only(top: 10, bottom: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDC2626).withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFDC2626).withOpacity(0.4), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.support_agent_rounded, size: 18, color: Color(0xFFDC2626)),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "RITHV SERVICES REMOTE SUPPORT",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFDC2626),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "Please share your 9-digit ID and One-Time Password below with your technician to begin.",
+            style: TextStyle(fontSize: 11, color: Colors.white70),
+          ),
+        ],
+      ),
+    );"""
             hp_text = re.sub(
                 r'Widget buildHelpCards\(String updateUrl\) \{',
-                'Widget buildHelpCards(String updateUrl) {\n    return const SizedBox();',
+                help_card_widget,
                 hp_text
             )
             

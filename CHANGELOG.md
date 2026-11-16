@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.2] - 2026-11-03
+
+Full Changelog: https://github.com/dnlhrth01/rvsdesk/compare/v1.9.1...v1.9.2
+
+### Added
+
+- Prominent "RITHV SERVICES REMOTE SUPPORT" customer guidance callout banner in the "Your Desk" section, instructing customers clearly on how remote support sessions work.
+- 1-Click "Copy ID & Password" button with formatted clipboard text (`ID: xxx xxx xxx | One-time Password: yyy`) so clients can share credentials with technicians without confusion.
+- Mandated strict English-only UI chrome in accordance with RVS Ecosystem global repository guidelines (`AGENTS.md`).
+
 ## [1.9.1] - 2026-10-30
 
 Full Changelog: https://github.com/dnlhrth01/rvsdesk/compare/v1.9.0...v1.9.1
