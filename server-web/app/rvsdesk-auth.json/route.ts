@@ -39,17 +39,20 @@ function readCurrentAuth(): { secret_hash: string; salt: string; version: number
   };
 }
 
-// GET: Dipanggil oleh aplikasi RVSDesk.exe untuk menyemak hash terkini
+// GET: Dipanggil oleh aplikasi RVDesk.exe untuk menyemak hash terkini & semakan versi
 export async function GET() {
   const authData = readCurrentAuth();
 
   return NextResponse.json(
     {
-      app_name: 'RVSDesk',
+      app_name: 'RVDesk',
       endpoint: 'https://rithvservices.my.id/rvsdesk-auth.json',
       secret_hash: authData.secret_hash,
       salt: authData.salt,
       version: authData.version,
+      latest_version: '1.9.2',
+      download_url: 'https://github.com/dnlhrth01/rvsdesk/releases/latest/download/RVDesk-Portable.exe',
+      repo_url: 'https://github.com/dnlhrth01/rvsdesk',
       updated_at: authData.updated_at,
     },
     {

@@ -47,6 +47,19 @@ def apply_branding(repo_root: str, assets_dir: str):
             print(f"  [+] Loaded controller auth config (Endpoint: {auth_endpoint}, Hash: {auth_hash[:8]}..., Salt: {auth_salt})")
         except Exception as e:
             print(f"  [!] Note on loading rvsdesk-auth.json: {e}")
+
+    # Muat versi semasa dari installer/VERSION
+    version_file = os.path.join(local_project_dir, "installer", "VERSION")
+    current_version = "1.9.2"
+    if os.path.exists(version_file):
+        try:
+            with open(version_file, "r", encoding="utf-8") as vf:
+                v = vf.read().strip()
+                if v:
+                    current_version = v
+        except Exception:
+            pass
+    print(f"  [+] Active RVDesk version: v{current_version}")
     
     # Core paths verified directly from repository structure
     config_rs = os.path.join(repo_root, "libs", "hbb_common", "src", "config.rs")
@@ -212,7 +225,7 @@ def apply_branding(repo_root: str, assets_dir: str):
         except Exception as e:
             print(f"  [!] Failed patching main.cpp: {e}")
 
-    # 7. Buang Mesej UAC & Kad Amaran 100% daripada UI (desktop_home_page.dart)
+    # 7. Buang Mesej UAC & Kad Amaran 100% daripada UI serta modenkan susun atur Quick Support (desktop_home_page.dart)
     if os.path.exists(desktop_home_page):
         try:
             with open(desktop_home_page, "r", encoding="utf-8", errors="ignore") as f:
@@ -231,12 +244,237 @@ def apply_branding(repo_root: str, assets_dir: str):
                 'Widget buildInstallCard(String title, String content, String btnText, GestureTapCallback onPressed, {double marginTop = 20.0, String? help, String? link, bool? closeButton, String? closeOption}) {\n    return const SizedBox();',
                 hp_text
             )
+
+            # Pelarasan susun atur panel kiri (Quick Support width & Obsidian background)
+            hp_text = hp_text.replace(
+                "width: isIncomingOnly ? 280.0 : 200.0,",
+                "width: isIncomingOnly ? 320.0 : 300.0,"
+            )
+            hp_text = hp_text.replace(
+                "color: Theme.of(context).colorScheme.background,",
+                "color: const Color(0xFF070A0F),"
+            )
+
+            # Modenkan teks tajuk dan arahan sokongan (buildTip)
+            hp_text = hp_text.replace(
+                'child: Text(\n                    translate("Your Desktop"),\n                    style: Theme.of(context).textTheme.titleLarge,\n                  ),',
+                'child: const Text(\n                    "Allow Remote Support",\n                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),\n                  ),'
+            )
+            hp_text = hp_text.replace(
+                'Text(\n              translate("desk_tip"),\n              overflow: TextOverflow.clip,\n              style: Theme.of(context).textTheme.bodySmall,\n            ),',
+                'const Text(\n              "Share this ID and one-time passcode with your RithV Services technician to begin repair.",\n              overflow: TextOverflow.clip,\n              style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),\n            ),'
+            )
+
+            # Modenkan kad ID (buildIDBoard) mengikut tema Figcraft dengan butang COPY
+            start_id = hp_text.find("  buildIDBoard(BuildContext context) {")
+            end_id = hp_text.find("  Widget buildPopupMenu", start_id)
+            if start_id != -1 and end_id != -1:
+                new_id_board = """  buildIDBoard(BuildContext context) {
+    final model = gFFI.serverModel;
+    return Container(
+      margin: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 6),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF020617),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFDC2626), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "YOUR DEVICE ID",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                  color: Color(0xFFF87171),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: model.serverId.text));
+                      showToast(translate("Copied"));
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E293B),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFF334155)),
+                      ),
+                      child: const Text(
+                        "COPY",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                          color: Color(0xFFF87171),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  buildPopupMenu(context),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          GestureDetector(
+            onDoubleTap: () {
+              Clipboard.setData(ClipboardData(text: model.serverId.text));
+              showToast(translate("Copied"));
+            },
+            child: TextFormField(
+              controller: model.serverId,
+              readOnly: true,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            ).workaroundFreezeLinuxMint(),
+          ),
+        ],
+      ),
+    );
+  }
+
+"""
+                hp_text = hp_text[:start_id] + new_id_board + hp_text[end_id:]
+
+            # Modenkan kad Password (buildPasswordBoard2) mengikut tema Figcraft
+            start_pw = hp_text.find("  buildPasswordBoard2(BuildContext context, ServerModel model) {")
+            end_pw = hp_text.find("  buildTip(BuildContext context) {", start_pw)
+            if start_pw != -1 and end_pw != -1:
+                new_pw_board = """  buildPasswordBoard2(BuildContext context, ServerModel model) {
+    RxBool refreshHover = false.obs;
+    RxBool editHover = false.obs;
+    final showOneTime = model.approveMode != 'click' &&
+        model.verificationMethod != kUsePermanentPassword;
+    return Container(
+      margin: const EdgeInsets.only(left: 16, right: 16, top: 6, bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF020617),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1E293B), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "ONE-TIME PASSCODE",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (showOneTime)
+                    AnimatedRotationWidget(
+                      onPressed: () => bind.mainUpdateTemporaryPassword(),
+                      child: Tooltip(
+                        message: translate('Refresh Password'),
+                        child: Obx(() => RotatedBox(
+                            quarterTurns: 2,
+                            child: Icon(
+                              Icons.refresh,
+                              color: refreshHover.value
+                                  ? const Color(0xFFF87171)
+                                  : const Color(0xFF9CA3AF),
+                              size: 18,
+                            ))),
+                      ),
+                      onHover: (value) => refreshHover.value = value,
+                    ).marginOnly(right: 6),
+                  if (!bind.isDisableSettings())
+                    InkWell(
+                      child: Tooltip(
+                        message: translate('Change Password'),
+                        child: Obx(
+                          () => Icon(
+                            Icons.edit,
+                            color: editHover.value
+                                ? const Color(0xFFF87171)
+                                : const Color(0xFF9CA3AF),
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      onTap: () => DesktopSettingPage.switch2page(
+                          SettingsTabKey.safety),
+                      onHover: (value) => editHover.value = value,
+                    ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onDoubleTap: () {
+                    if (showOneTime) {
+                      Clipboard.setData(
+                          ClipboardData(text: model.serverPasswd.text));
+                      showToast(translate("Copied"));
+                    }
+                  },
+                  child: TextFormField(
+                    controller: model.serverPasswd,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ).workaroundFreezeLinuxMint(),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+"""
+                hp_text = hp_text[:start_pw] + new_pw_board + hp_text[end_pw:]
             
             with open(desktop_home_page, "w", encoding="utf-8") as f:
                 f.write(hp_text)
-            print("  [+] Stripped ALL UAC & Install cards from desktop_home_page.dart")
+            print("  [+] Stripped ALL UAC & Install cards & applied Quick Support modern card layout to desktop_home_page.dart")
         except Exception as e:
-            print(f"  [!] Failed stripping UAC in desktop_home_page.dart: {e}")
+            print(f"  [!] Failed patching desktop_home_page.dart: {e}")
 
     # 8. Suntik Kawalan Pengesahan Rahsia Pengawal & Buang 'setup your own server' (connection_page.dart)
     if os.path.exists(connection_page):
@@ -252,14 +490,14 @@ def apply_branding(repo_root: str, assets_dir: str):
                 flags=re.DOTALL
             )
 
-            # 8a. Suntik imports yang diperlukan (dart:typed_data & package:http/http.dart)
+            # 8a. Suntik imports yang diperlukan (dart:typed_data, dart:io, package:flutter/services.dart & package:http/http.dart)
             if "import 'dart:typed_data';" not in cp_text:
                 cp_text = cp_text.replace(
                     "import 'dart:convert';",
-                    "import 'dart:convert';\nimport 'dart:typed_data';\nimport 'package:http/http.dart' as http;"
+                    "import 'dart:convert';\nimport 'dart:typed_data';\nimport 'dart:io';\nimport 'package:flutter/services.dart';\nimport 'package:http/http.dart' as http;"
                 )
 
-            # 8b. Suntik pembolehubah & logik autorisasi ke dalam _ConnectionPageState
+            # 8b. Suntik pembolehubah, logik autorisasi & auto-updater ke dalam _ConnectionPageState
             state_class_header = "class _ConnectionPageState extends State<ConnectionPage>\n    with SingleTickerProviderStateMixin, WindowListener {"
             
             auth_injected_logic = f'''{state_class_header}
@@ -276,6 +514,250 @@ def apply_branding(repo_root: str, assets_dir: str):
   final RxString _authError = ''.obs;
   final RxBool _authObscure = true.obs;
   final TextEditingController _authPasswordController = TextEditingController();
+
+  // =========================================================================
+  // RVDesk In-App 1-Click Updater Logic (GitHub Releases + Web Fallback)
+  // =========================================================================
+  static const String _rvsCurrentVersion = "{current_version}";
+  static const String _rvsGithubRepo = "dnlhrth01/rvsdesk";
+  static const String _rvsGithubApi = "https://api.github.com/repos/$_rvsGithubRepo/releases/latest";
+
+  final RxBool _hasUpdate = false.obs;
+  final RxString _latestVersion = ''.obs;
+  final RxString _updateDownloadUrl = ''.obs;
+  final RxBool _isDownloadingUpdate = false.obs;
+  final RxDouble _downloadProgress = 0.0.obs;
+  final RxString _updateStatusText = ''.obs;
+
+  Future<void> _checkForUpdates() async {{
+    try {{
+      String latestVer = "";
+      String downloadUrl = "";
+
+      // 1. Semak GitHub Releases API dahulu
+      try {{
+        final client = http.Client();
+        final res = await client.get(
+          Uri.parse(_rvsGithubApi),
+          headers: {{
+            'User-Agent': 'RVDesk-Client-v$_rvsCurrentVersion',
+            'Accept': 'application/vnd.github.v3+json',
+          }},
+        ).timeout(const Duration(seconds: 4));
+
+        if (res.statusCode == 200) {{
+          final data = jsonDecode(res.body);
+          final tagName = (data['tag_name'] ?? '').toString().replaceAll('v', '').trim();
+          if (tagName.isNotEmpty) {{
+            latestVer = tagName;
+            final assets = data['assets'] as List?;
+            if (assets != null && assets.isNotEmpty) {{
+              for (var asset in assets) {{
+                final name = (asset['name'] ?? '').toString();
+                if (name.endsWith('.exe') && name.contains('RVDesk')) {{
+                  downloadUrl = asset['browser_download_url'] ?? '';
+                  break;
+                }}
+              }}
+              if (downloadUrl.isEmpty && assets.isNotEmpty) {{
+                downloadUrl = assets[0]['browser_download_url'] ?? '';
+              }}
+            }}
+          }}
+        }}
+        client.close();
+      }} catch (_) {{}}
+
+      // 2. Sandaran Fallback ke Web Portal jika GitHub dihadkan / gagal
+      if (latestVer.isEmpty) {{
+        try {{
+          final client = http.Client();
+          final res = await client.get(
+            Uri.parse(_rvsAuthEndpoint),
+            headers: {{'User-Agent': 'RVDesk-Client-v$_rvsCurrentVersion'}},
+          ).timeout(const Duration(seconds: 4));
+
+          if (res.statusCode == 200) {{
+            final data = jsonDecode(res.body);
+            latestVer = (data['latest_version'] ?? '').toString().replaceAll('v', '').trim();
+            downloadUrl = data['download_url'] ?? '';
+          }}
+          client.close();
+        }} catch (_) {{}}
+      }}
+
+      if (latestVer.isNotEmpty && _isVersionHigher(latestVer, _rvsCurrentVersion)) {{
+        _latestVersion.value = latestVer;
+        _updateDownloadUrl.value = downloadUrl.isNotEmpty
+            ? downloadUrl
+            : "https://github.com/$_rvsGithubRepo/releases/latest/download/RVDesk-Portable.exe";
+        _hasUpdate.value = true;
+      }}
+    }} catch (_) {{}}
+  }}
+
+  static bool _isVersionHigher(String remote, String current) {{
+    try {{
+      final rParts = remote.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+      final cParts = current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+      for (int i = 0; i < 3; i++) {{
+        final r = i < rParts.length ? rParts[i] : 0;
+        final c = i < cParts.length ? cParts[i] : 0;
+        if (r > c) return true;
+        if (r < c) return false;
+      }}
+    }} catch (_) {{}}
+    return false;
+  }}
+
+  Future<void> _performInAppUpdate(BuildContext context) async {{
+    final url = _updateDownloadUrl.value;
+    if (url.isEmpty) return;
+
+    _isDownloadingUpdate.value = true;
+    _downloadProgress.value = 0.0;
+    _updateStatusText.value = "Connecting to repository...";
+
+    try {{
+      final client = http.Client();
+      final req = http.Request('GET', Uri.parse(url));
+      req.headers['User-Agent'] = 'RVDesk-Client-v$_rvsCurrentVersion';
+      final response = await client.send(req);
+
+      final totalBytes = response.contentLength ?? 25000000;
+      int receivedBytes = 0;
+
+      final currentExePath = Platform.resolvedExecutable;
+      final exeDir = File(currentExePath).parent.path;
+      final updateExePath = "$exeDir\\\\RVDesk-Update.exe";
+      final updateFile = File(updateExePath);
+      final sink = updateFile.openWrite();
+
+      await response.stream.listen((chunk) {{
+        sink.add(chunk);
+        receivedBytes += chunk.length;
+        final progress = receivedBytes / totalBytes;
+        _downloadProgress.value = progress.clamp(0.0, 1.0);
+        final mbRec = (receivedBytes / (1024 * 1024)).toStringAsFixed(1);
+        final mbTotal = (totalBytes / (1024 * 1024)).toStringAsFixed(1);
+        _updateStatusText.value = "Downloading: $mbRec MB / $mbTotal MB (${{(_downloadProgress.value * 100).toInt()}}%)";
+      }}).asFuture();
+
+      await sink.flush();
+      await sink.close();
+      client.close();
+
+      _updateStatusText.value = "Verifying binary & restarting...";
+
+      final swapBatPath = "$exeDir\\\\rvdesk_swap.bat";
+      final swapContent = \'\'\'@echo off
+timeout /t 1 /nobreak >nul
+copy /y "$updateExePath" "$currentExePath" >nul 2>&1
+del "$updateExePath" >nul 2>&1
+start "" "$currentExePath"
+del "%~f0"
+\'\'\';
+      await File(swapBatPath).writeAsString(swapContent);
+      await Process.start('cmd.exe', ['/c', swapBatPath], mode: ProcessStartMode.detached);
+      exit(0);
+    }} catch (e) {{
+      _isDownloadingUpdate.value = false;
+      _updateStatusText.value = "Update failed: $e";
+      showToast("Update failed: $e");
+    }}
+  }}
+
+  void _showUpdateDialog(BuildContext context) {{
+    showDialog(
+      context: context,
+      barrierDismissible: !_isDownloadingUpdate.value,
+      builder: (ctx) => Obx(() => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: 440,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFDC2626), width: 1),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: const Color(0xFF334155)),
+                ),
+                child: const Text(
+                  "SYSTEM UPDATE • NEW VERSION READY",
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: Color(0xFFF87171),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "RVDesk v${{_latestVersion.value}} Available",
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "A newer release is available on the repository (Current: v$_rvsCurrentVersion). Update now for the latest stability and security enhancements.",
+                style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF), height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              if (_isDownloadingUpdate.value) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: _downloadProgress.value > 0 ? _downloadProgress.value : null,
+                    minHeight: 8,
+                    backgroundColor: const Color(0xFF020617),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFDC2626)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _updateStatusText.value,
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                ),
+              ] else ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text("Later", style: TextStyle(color: Color(0xFF9CA3AF))),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => _performInAppUpdate(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFDC2626),
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text(
+                        "Update & Restart",
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      )),
+    );
+  }}
 
   static String _calcSha256(String input) {{
     List<int> bytes = utf8.encode(input);
@@ -416,25 +898,73 @@ def apply_branding(repo_root: str, assets_dir: str):
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(0.4),
+        color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFDC2626), width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.shield_outlined, size: 52, color: Colors.redAccent),
+          Obx(() => _hasUpdate.value
+              ? InkWell(
+                  onTap: () => _showUpdateDialog(context),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0x33DC2626),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFDC2626)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          "NEW VERSION AVAILABLE: v",
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.8, color: Color(0xFFF87171)),
+                        ),
+                        Text(
+                          _latestVersion.value,
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          "(UPDATE NOW)",
+                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF9CA3AF)),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink()),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E293B),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0xFF334155)),
+            ),
+            child: const Text(
+              "CONTROLLER GATEWAY",
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                color: Color(0xFFF87171),
+              ),
+            ),
+          ),
           const SizedBox(height: 12),
           const Text(
-            "Restricted Remote Control (Technicians Only)",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            "Server Authorization Required",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          Text(
-            "This RVDesk server is restricted to authorized technicians only. Please enter the controller secret password to initiate an outgoing remote session.",
-            style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.8)),
+          const Text(
+            "This controller is verified against rithvservices.my.id. Enter the administrator secret password to proceed.",
+            style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 18),
@@ -442,40 +972,77 @@ def apply_branding(repo_root: str, assets_dir: str):
                 controller: _authPasswordController,
                 obscureText: _authObscure.value,
                 onSubmitted: (_) => _onUnlockPressed(),
+                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: "Controller Secret Password",
-                  prefixIcon: const Icon(Icons.key_rounded, size: 20),
+                  prefixIcon: const Icon(Icons.key_rounded, size: 20, color: Color(0xFFF87171)),
                   suffixIcon: IconButton(
                     icon: Icon(_authObscure.value ? Icons.visibility_off : Icons.visibility, size: 20),
                     onPressed: () => _authObscure.value = !_authObscure.value,
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: const Color(0xFF020617),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFF334155)),
+                  ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
               )),
           Obx(() => _authError.value.isNotEmpty
               ? Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(_authError.value, style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w600)),
+                  child: Text(_authError.value, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.w600)),
                 )
               : const SizedBox.shrink()),
           const SizedBox(height: 16),
           Obx(() => ElevatedButton.icon(
                 icon: _authLoading.value
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.lock_open_rounded, size: 18),
-                label: Text(_authLoading.value ? "Verifying..." : "Unlock Controller"),
+                    : const Icon(Icons.lock_open_rounded, size: 18, color: Colors.white),
+                label: Text(
+                  _authLoading.value ? "Verifying..." : "Authorize & Connect",
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                ),
                 onPressed: _authLoading.value ? null : _onUnlockPressed,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC2626),
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               )),
           const SizedBox(height: 16),
           Text(
-            "💡 Clients seeking remote assistance do not need to unlock this. Just provide the ID & One-Time Password on the left.",
+            "Note: Clients seeking remote assistance do not need to unlock this. Just provide the ID & One-Time Passcode on the left.",
             style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.grey.withOpacity(0.8)),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () {{
+              final id = bind.mainGetLocalOption(key: 'id');
+              final pwd = bind.mainGetLocalOption(key: 'password');
+              Clipboard.setData(ClipboardData(text: "ID: $id | Password: $pwd"));
+              showToast("Connection credentials copied to clipboard!");
+            }},
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDC2626).withOpacity(0.18),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFDC2626)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.copy_rounded, size: 16, color: Colors.white),
+                  SizedBox(width: 6),
+                  Text("Copy ID & Password", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -535,27 +1102,58 @@ def apply_branding(repo_root: str, assets_dir: str):
                     Padding(
                       padding: const EdgeInsets.only(top: 8, right: 16, bottom: 4),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.verified_rounded, size: 14, color: Colors.green),
-                                SizedBox(width: 4),
-                                Text("Verified Technician", style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          InkWell(
-                            onTap: _lockController,
-                            child: const Text("Lock Again", style: TextStyle(fontSize: 11, color: Colors.grey, decoration: TextDecoration.underline)),
+                          Obx(() => _hasUpdate.value
+                              ? InkWell(
+                                  onTap: () => _showUpdateDialog(context),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0x33DC2626),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: const Color(0xFFDC2626)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          "UPDATE: v",
+                                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.8, color: Color(0xFFF87171)),
+                                        ),
+                                        Text(
+                                          _latestVersion.value,
+                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink()),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(Icons.verified_rounded, size: 14, color: Colors.green),
+                                    SizedBox(width: 4),
+                                    Text("Verified Technician", style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              InkWell(
+                                onTap: _lockController,
+                                child: const Text("Lock Again", style: TextStyle(fontSize: 11, color: Colors.grey, decoration: TextDecoration.underline)),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -581,7 +1179,7 @@ def apply_branding(repo_root: str, assets_dir: str):
             cp_text = cp_text.replace(state_class_header, auth_injected_logic, 1)
 
             assert target_init in cp_text, "Ralat: Sasaran _allPeersLoader.init tidak ditemui dalam _ConnectionPageState!"
-            cp_text = cp_text.replace(target_init, f"{target_init}\n    _checkStoredAuth();", 1)
+            cp_text = cp_text.replace(target_init, f"{target_init}\n    _checkStoredAuth();\n    _checkForUpdates();", 1)
 
             assert onconnect_sig in cp_text, "Ralat: Tandatangan onConnect tidak ditemui!"
             cp_text = cp_text.replace(onconnect_sig, onconnect_protected, 1)
@@ -647,6 +1245,20 @@ def apply_branding(repo_root: str, assets_dir: str):
             cd_text = cd_text.replace(
                 "static const Color idColor = Color(0xFF00B6F0);",
                 "static const Color idColor = Color(0xFFF87171);"
+            )
+
+            # Terapkan Tema Latar Belakang Obsidian Black & Slate Card rithvservices (#070A0F & #0F172A)
+            cd_text = cd_text.replace(
+                "scaffoldBackgroundColor: Color(0xFF18191E),",
+                "scaffoldBackgroundColor: Color(0xFF070A0F),"
+            )
+            cd_text = cd_text.replace(
+                "dialogBackgroundColor: Color(0xFF18191E),",
+                "dialogBackgroundColor: Color(0xFF0F172A),"
+            )
+            cd_text = cd_text.replace(
+                "static const Color canvasColor = Color(0xFF212121);",
+                "static const Color canvasColor = Color(0xFF070A0F);"
             )
             
             with open(common_dart, "w", encoding="utf-8") as f:

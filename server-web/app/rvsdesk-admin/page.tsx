@@ -8,6 +8,8 @@ interface AuthInfo {
   secret_hash?: string;
   salt?: string;
   version?: number;
+  latest_version?: string;
+  download_url?: string;
   updated_at?: string;
 }
 
@@ -152,7 +154,9 @@ export default function RVSDeskAdminPage() {
         {/* Alert Message */}
         {message && (
           <div style={message.type === 'success' ? styles.alertSuccess : styles.alertError}>
-            <span>{message.type === 'success' ? '✅' : '⚠️'}</span>
+            <span style={{ fontWeight: 700, fontSize: '11px', letterSpacing: '0.5px' }}>
+              {message.type === 'success' ? '[SUCCESS]' : '[ERROR]'}
+            </span>
             <span style={{ flex: 1, fontSize: '13px', lineHeight: 1.4 }}>{message.text}</span>
           </div>
         )}
@@ -178,9 +182,9 @@ export default function RVSDeskAdminPage() {
                 type="button"
                 onClick={() => setShowPin(!showPin)}
                 style={styles.toggleBtn}
-                title="Show / Hide PIN"
+                title="Toggle PIN Visibility"
               >
-                {showPin ? '👁️' : '🙈'}
+                {showPin ? 'HIDE' : 'SHOW'}
               </button>
             </div>
           </div>
@@ -194,7 +198,7 @@ export default function RVSDeskAdminPage() {
                 onClick={generateStrongPassword}
                 style={styles.generateBtn}
               >
-                ✨ Generate Random
+                Generate Random
               </button>
             </div>
             <div style={styles.inputWrapper}>
@@ -210,9 +214,9 @@ export default function RVSDeskAdminPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={styles.toggleBtn}
-                title="Show / Hide Password"
+                title="Toggle Password Visibility"
               >
-                {showPassword ? '👁️' : '🙈'}
+                {showPassword ? 'HIDE' : 'SHOW'}
               </button>
               {newPassword && (
                 <button
@@ -221,7 +225,7 @@ export default function RVSDeskAdminPage() {
                   style={styles.copyBtn}
                   title="Copy Password"
                 >
-                  {copiedText === 'pass' ? '✓ Copied' : '📋'}
+                  {copiedText === 'pass' ? 'COPIED' : 'COPY'}
                 </button>
               )}
             </div>
@@ -233,18 +237,18 @@ export default function RVSDeskAdminPage() {
             disabled={updating}
             style={updating ? styles.submitBtnDisabled : styles.submitBtn}
           >
-            {updating ? 'Updating Server...' : '🚀 Update Secret Password Now'}
+            {updating ? 'Updating Server...' : 'Update Secret Password Now'}
           </button>
         </form>
 
         {/* Footer Notes */}
         <div style={styles.footer}>
           <div style={styles.footerItem}>
-            <span>🛡️</span>
+            <span style={{ color: '#EF4444', fontWeight: 'bold' }}>•</span>
             <span>All outgoing <strong>RVSDesk.exe</strong> controllers will immediately require this new password.</span>
           </div>
           <div style={styles.footerItem}>
-            <span>👤</span>
+            <span style={{ color: '#10B981', fontWeight: 'bold' }}>•</span>
             <span>Normal clients only receiving remote support are not affected.</span>
           </div>
         </div>
@@ -435,21 +439,28 @@ const styles: { [key: string]: React.CSSProperties } = {
   toggleBtn: {
     position: 'absolute',
     right: '12px',
-    background: 'none',
-    border: 'none',
-    fontSize: '15px',
+    background: 'rgba(255, 255, 255, 0.06)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '4px',
+    color: '#9CA3AF',
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.5px',
+    padding: '3px 6px',
     cursor: 'pointer',
-    opacity: 0.7,
+    opacity: 0.85,
   },
   copyBtn: {
     position: 'absolute',
-    right: '40px',
-    background: 'rgba(255, 255, 255, 0.08)',
-    border: 'none',
-    borderRadius: '6px',
-    color: '#E5E7EB',
+    right: '60px',
+    background: 'rgba(220, 38, 38, 0.15)',
+    border: '1px solid rgba(220, 38, 38, 0.3)',
+    borderRadius: '4px',
+    color: '#F87171',
     padding: '3px 8px',
-    fontSize: '11px',
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.5px',
     cursor: 'pointer',
   },
   submitBtn: {

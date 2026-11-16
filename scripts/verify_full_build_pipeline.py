@@ -79,18 +79,28 @@ def run_audit():
 
     assert "_checkStoredAuth" not in online_section, "FAILED: _checkStoredAuth is located inside _OnlineStatusWidgetState!"
     assert "_checkStoredAuth();" in conn_section, "FAILED: _checkStoredAuth() missing from _ConnectionPageState!"
+    assert "_checkForUpdates();" in conn_section, "FAILED: _checkForUpdates() missing from _ConnectionPageState!"
+    assert "_performInAppUpdate" in conn_section, "FAILED: _performInAppUpdate missing from _ConnectionPageState!"
+    assert "_showUpdateDialog" in conn_section, "FAILED: _showUpdateDialog missing from _ConnectionPageState!"
+    assert "UPDATE: v" in conn_section, "FAILED: Update badge missing from connection_page.dart UI!"
     assert "_buildLockedCard(context)" in conn_section, "FAILED: _buildLockedCard missing from UI!"
     assert "!_isControllerAuthorized.value" in conn_section, "FAILED: onConnect authorization check missing!"
     assert "Verified Technician" in conn_section, "FAILED: Verified Technician indicator badge missing!"
     assert "setupServerWidget() => const SizedBox.shrink();" in conn_text, "FAILED: Server setup tip not stripped!"
-    print("  [OK] connection_page.dart: 100% Valid & Free from Class/Method Errors.")
+    assert "CONTROLLER GATEWAY" in conn_text, "FAILED: CONTROLLER GATEWAY badge missing from connection_page.dart!"
+    assert "Color(0xFF0F172A)" in conn_text, "FAILED: Obsidian Slate card Color(0xFF0F172A) missing from connection_page.dart!"
+    print("  [OK] connection_page.dart: 100% Valid & Free from Class/Method Errors (Figcraft Gateway & In-App Updater Integrated).")
 
     # Audit 2: desktop_home_page.dart
     hp_path = os.path.join(temp_engine, "flutter", "lib", "desktop", "pages", "desktop_home_page.dart")
     with open(hp_path, "r", encoding="utf-8") as f:
         hp_text = f.read()
     assert "return const SizedBox();" in hp_text, "FAILED: UAC warning card not stripped!"
-    print("  [OK] desktop_home_page.dart: 100% Valid (All UAC/Install cards stripped).")
+    assert "YOUR DEVICE ID" in hp_text, "FAILED: Modern YOUR DEVICE ID card not injected into desktop_home_page.dart!"
+    assert "ONE-TIME PASSCODE" in hp_text, "FAILED: Modern ONE-TIME PASSCODE card not injected into desktop_home_page.dart!"
+    assert "Allow Remote Support" in hp_text, "FAILED: Allow Remote Support header not injected into desktop_home_page.dart!"
+    assert "Color(0xFF070A0F)" in hp_text, "FAILED: Obsidian background Color(0xFF070A0F) missing from desktop_home_page.dart!"
+    print("  [OK] desktop_home_page.dart: 100% Valid (Figcraft Quick Support Cards & UAC Stripped).")
 
     # Audit 3: config.rs
     cfg_path = os.path.join(temp_engine, "libs", "hbb_common", "src", "config.rs")
@@ -113,22 +123,24 @@ def run_audit():
         cd_text = f.read()
     assert "Color(0xFFDC2626)" in cd_text, "FAILED: Crimson Red accent not injected into common.dart!"
     assert "Color(0xFFEF4444)" in cd_text, "FAILED: Crimson Red button not injected into common.dart!"
-    print("  [OK] common.dart: 100% Valid (Crimson Red Theme #DC2626 active).")
+    assert "Color(0xFF070A0F)" in cd_text, "FAILED: Obsidian scaffoldBackgroundColor missing from common.dart!"
+    assert "Color(0xFF0F172A)" in cd_text, "FAILED: Slate dialogBackgroundColor missing from common.dart!"
+    print("  [OK] common.dart: 100% Valid (Obsidian & Crimson Red Theme active).")
 
     # Audit 6: Cargo.toml & Portable Metadata (Description replaced, Credit preserved)
     root_cargo_path = os.path.join(temp_engine, "Cargo.toml")
     with open(root_cargo_path, "r", encoding="utf-8") as f:
         root_cargo = f.read()
-    assert 'FileDescription = "RVSDesk Remote Desktop"' in root_cargo, "FAILED: FileDescription not updated in Cargo.toml!"
-    assert 'ProductName = "RVSDesk"' in root_cargo, "FAILED: ProductName not updated in Cargo.toml!"
+    assert 'FileDescription = "RVDesk Remote Desktop"' in root_cargo, "FAILED: FileDescription not updated in Cargo.toml!"
+    assert 'ProductName = "RVDesk"' in root_cargo, "FAILED: ProductName not updated in Cargo.toml!"
     assert "Purslane Tech Pte. Ltd." in root_cargo, "FAILED: Copyright credit stripped from Cargo.toml!"
-    print("  [OK] Cargo.toml: 100% Valid (FileDescription = RVSDesk Remote Desktop, License Credit Preserved).")
+    print("  [OK] Cargo.toml: 100% Valid (FileDescription = RVDesk Remote Desktop, License Credit Preserved).")
 
     portable_cargo_path = os.path.join(temp_engine, "libs", "portable", "Cargo.toml")
     with open(portable_cargo_path, "r", encoding="utf-8") as f:
         portable_cargo = f.read()
-    assert 'description = "RVSDesk Remote Desktop"' in portable_cargo, "FAILED: description not updated in libs/portable/Cargo.toml!"
-    print("  [OK] libs/portable/Cargo.toml: 100% Valid (description = RVSDesk Remote Desktop).")
+    assert 'description = "RVDesk Remote Desktop"' in portable_cargo, "FAILED: description not updated in libs/portable/Cargo.toml!"
+    print("  [OK] libs/portable/Cargo.toml: 100% Valid (description = RVDesk Remote Desktop).")
 
     print("\n[4/4] Executing Dart syntax & formatting checks...")
     # If dart CLI installed, test 'dart format --dry-run' on connection_page.dart
