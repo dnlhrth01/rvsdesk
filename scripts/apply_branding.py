@@ -50,7 +50,7 @@ def apply_branding(repo_root: str, assets_dir: str):
 
     # Muat versi semasa dari installer/VERSION
     version_file = os.path.join(local_project_dir, "installer", "VERSION")
-    current_version = "1.9.2"
+    current_version = "1.9.3"
     if os.path.exists(version_file):
         try:
             with open(version_file, "r", encoding="utf-8") as vf:

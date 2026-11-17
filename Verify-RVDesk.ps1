@@ -32,7 +32,7 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $latestJsonPath = Join-Path $scriptDir "releases\latest.json"
 
 $officialHash = "44A3FD06E488379F9494F806A64F7D26E417056405F4C926DF5204CFC3E8C388"
-$officialVersion = "1.9.2"
+$officialVersion = "1.9.3"
 $officialFilename = "RVDesk.exe"
 
 if (Test-Path -LiteralPath $latestJsonPath) {

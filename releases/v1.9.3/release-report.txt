@@ -1,0 +1,29 @@
+=================================================================
+RITHV SERVICES — OFFICIAL RELEASE INTEGRITY REPORT
+=================================================================
+Product               : RVDesk (RVDesk Remote Desktop)
+Publisher             : RithV Services
+Version               : v1.9.2
+Platform              : Windows x64 (10 / 11)
+Release Date (UTC)    : 2026-11-17T05:47:45.475062+00:00
+Target Executable     : RVDesk-Portable.exe
+File Size             : 24581632 bytes (23.44 MB)
+-----------------------------------------------------------------
+CRYPTOGRAPHIC INTEGRITY:
+SHA-256 Checksum      : 6A056EFDA46C3F05C28920BBA7924A02C99FA18D670475136F482684898FB141
+Verification URL      : https://rithvservices.my.id/downloads
+-----------------------------------------------------------------
+SECURITY & DIGITAL SIGNATURE AUDIT:
+Authenticode Status   : Unsigned
+Signature Details     : Executable contains no Authenticode digital signature.
+Microsoft Defender    : Threat Detected
+VirusTotal Report     : https://www.virustotal.com/gui/file/6A056EFDA46C3F05C28920BBA7924A02C99FA18D670475136F482684898FB141
+VirusTotal Status     : Manual Verification Available
+-----------------------------------------------------------------
+TRANSPARENCY STATEMENT:
+- Zero-Cost Open Source: This binary is distributed free of charge.
+- Commercial certificates cost hundreds of dollars annually; therefore,
+  standard open-source binaries show 'Unknown Publisher' in SmartScreen.
+- Users can cryptographically verify authenticity by matching the
+  SHA-256 checksum published above.
+=================================================================

@@ -5,19 +5,19 @@ Product               : RVDesk (RVDesk Remote Desktop)
 Publisher             : RithV Services
 Version               : v1.9.2
 Platform              : Windows x64 (10 / 11)
-Release Date (UTC)    : 2026-11-17T03:22:28.470439+00:00
-Target Executable     : RVDesk.exe
-File Size             : 25815040 bytes (24.62 MB)
+Release Date (UTC)    : 2026-11-17T05:47:45.475062+00:00
+Target Executable     : RVDesk-Portable.exe
+File Size             : 24581632 bytes (23.44 MB)
 -----------------------------------------------------------------
 CRYPTOGRAPHIC INTEGRITY:
-SHA-256 Checksum      : 44A3FD06E488379F9494F806A64F7D26E417056405F4C926DF5204CFC3E8C388
+SHA-256 Checksum      : 6A056EFDA46C3F05C28920BBA7924A02C99FA18D670475136F482684898FB141
 Verification URL      : https://rithvservices.my.id/downloads
 -----------------------------------------------------------------
 SECURITY & DIGITAL SIGNATURE AUDIT:
 Authenticode Status   : Unsigned
 Signature Details     : Executable contains no Authenticode digital signature.
-Microsoft Defender    : Passed (No Threats Detected)
-VirusTotal Report     : https://www.virustotal.com/gui/file/44A3FD06E488379F9494F806A64F7D26E417056405F4C926DF5204CFC3E8C388
+Microsoft Defender    : Threat Detected
+VirusTotal Report     : https://www.virustotal.com/gui/file/6A056EFDA46C3F05C28920BBA7924A02C99FA18D670475136F482684898FB141
 VirusTotal Status     : Manual Verification Available
 -----------------------------------------------------------------
 TRANSPARENCY STATEMENT:
