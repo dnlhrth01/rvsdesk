@@ -1,0 +1,23 @@
+{
+  "publisher": "RithV Services",
+  "product": "RVDesk",
+  "product_description": "RVDesk Remote Desktop",
+  "version": "1.9.2",
+  "platform": "Windows x64 (10 / 11)",
+  "filename": "RVDesk.exe",
+  "file_size": 25815040,
+  "file_size_mb": 24.62,
+  "sha256": "44A3FD06E488379F9494F806A64F7D26E417056405F4C926DF5204CFC3E8C388",
+  "signature_status": "Unsigned",
+  "signature_details": "Executable contains no Authenticode digital signature.",
+  "is_signed": false,
+  "defender_scan_status": "Passed (No Threats Detected)",
+  "defender_scan_output": "Scan starting...\nScan finished.\nScanning C:\\Users\\User\\.gemini\\antigravity-ide\\scratch\\rvsdesk\\RVDesk.exe found no threats.",
+  "virustotal_status": "Manual Verification Available",
+  "virustotal_url": "https://www.virustotal.com/gui/file/44A3FD06E488379F9494F806A64F7D26E417056405F4C926DF5204CFC3E8C388",
+  "virustotal_positives": 0,
+  "virustotal_total": 0,
+  "release_date": "2026-11-17T03:22:28.470439+00:00",
+  "official_download": "https://rithvservices.my.id/downloads",
+  "github_release_url": "https://github.com/dnlhrth01/rvsdesk/releases/tag/v1.9.2"
+}

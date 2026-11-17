@@ -152,15 +152,24 @@ jobs:
           cd engine
           # 1. Kompilasi enjin teras dan bina bundle Flutter (tanpa --hwcodec agar tidak memerlukan header C++ FFmpeg yang hilang)
           python build.py --portable --flutter --skip-portable-pack
+          if ($LASTEXITCODE -ne 0) {
+            throw "build.py execution failed with exit code $LASTEXITCODE"
+          }
           
           # 2. Salin output build Flutter ke direktori release dan namakan RVDesk.exe
+          $bundleDir = $null
           if (Test-Path "flutter/build/windows/x64/runner/Release") {
-            Copy-Item -Path "flutter/build/windows/x64/runner/Release" -Destination "..\rustdesk_bundle" -Recurse -Force
+            $bundleDir = "flutter/build/windows/x64/runner/Release"
+          } elseif (Test-Path "flutter/build/windows/runner/Release") {
+            $bundleDir = "flutter/build/windows/runner/Release"
+          }
+          if ($bundleDir) {
+            Copy-Item -Path $bundleDir -Destination "..\rustdesk_bundle" -Recurse -Force
             if (Test-Path "..\rustdesk_bundle\rustdesk.exe") {
               Move-Item -Path "..\rustdesk_bundle\rustdesk.exe" -Destination "..\rustdesk_bundle\RVDesk.exe" -Force
             }
           } else {
-            Write-Error "Flutter Windows release bundle was not found!"
+            throw "Flutter Windows release bundle was not found!"
           }
 
       - name: Verify Auth Host in Built Bundle

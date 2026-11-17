@@ -1,37 +1,36 @@
-# 🛰️ RVDesk by RithV Services - Portable Remote Desktop
+# RVDesk by RithV Services — Portable Remote Desktop
 
 <p align="center">
   <img src="assets/icon_256x256.png" width="160" alt="RVDesk Logo" />
   <br>
   <b>Fast, Secure, and 100% Free Remote Desktop Software</b>
   <br>
-  <i>RVDesk by RithV Services • Single Portable .exe • Zero Server Cost • Self-Signed Authenticode • Encrypted P2P</i>
+  <i>RVDesk by RithV Services • Single Portable .exe • Zero Cost • Cryptographic SHA-256 Verification • Encrypted P2P</i>
 </p>
 
 ---
 
-## 📥 Download & Install
+## Downloads & Verification
 
-All official builds are published at:
+Official releases are hosted at:
 
-**https://github.com/dnlhrth01/rvsdesk/releases/latest**
+- **Web Portal**: [https://rithvservices.my.id/downloads](https://rithvservices.my.id/downloads)
+- **GitHub Releases**: [https://github.com/dnlhrth01/rvsdesk/releases/latest](https://github.com/dnlhrth01/rvsdesk/releases/latest)
 
 | Asset | Description |
 |---|---|
-| `RVDesk-Downloader.bat` | 🚀 **Official Installer (Recommended)**: 1-Click Silent Smart Downloader & Launcher (Bypasses SmartScreen without prompts). |
-| `RVDesk-Setup-<version>.exe` | Inno Setup installer (signed when the signing secrets are configured). |
-| `RVDesk-Portable.exe` | Single-file portable build - no installation required. |
-| `RVDesk-Portable.zip` | Portable bundle: `RVDesk.exe`, `Setup_Trust_RVDesk.bat`, `RVDesk-Launcher.bat`, `RVDesk-Downloader.bat`, and `RVDesk_Authority.cer`. |
-| `Setup_Trust_RVDesk.bat` | One-click helper that trusts `RVDesk_Authority.cer` and clears the Mark of the Web. |
-| `RVDesk-Launcher.bat` | SmartScreen-friendly launcher for the bundled `RVDesk.exe`. |
-| `RVDesk_Authority.cer` | Public self-signed code-signing certificate for the portable line. |
+| `RVDesk.exe` / `RVDesk-Portable.exe` | **Primary Release**: Single-file portable build — no installation required. |
+| `Verify-RVDesk.ps1` | **Integrity Tool**: 1-Click PowerShell script to verify the cryptographic SHA-256 checksum. |
+| `RVDesk.exe.sha256` / `SHA256SUMS.txt` | Cryptographic reference checksum file. |
+| `release.json` | Machine-readable release metadata, scan records, and audit status. |
+| `release-report.txt` | Human-readable pre-release integrity and antivirus scan audit report. |
 
-> **Official Installer (Anti-SmartScreen Quick Start)**:
-> Download `RVDesk-Downloader.bat` directly from the release page and run it. It fetches the official binary directly via GitHub API, clears the Mark-of-the-Web (Zone.Identifier) stream, registers certificate trust silently, and launches RVDesk immediately without Windows SmartScreen blocks.
->
-> 💬 **Bantuan & Support**: Jika anda mengalami sebarang isu pemasangan atau sambungan, hubungi pasukan rasmi di **`rithvservices@gmail.com`**.
-
-> The portable line is built from the stock RustDesk source, rebranded by `scripts/apply_branding.py`, then stamped with `rcedit` and verified (`ProductName` must read `RVDesk`). AGPL-3.0 attribution is retained in the binary metadata.
+> **Security & Transparency Policy**:
+> As a 100% free open-source software project, RVDesk is distributed without paid commercial code-signing certificates.
+> Windows Defender SmartScreen may display an "Unknown Publisher" prompt on first launch.
+> To ensure your software is authentic and uncompromised, verify the SHA-256 checksum against [https://rithvservices.my.id/downloads](https://rithvservices.my.id/downloads) before clicking "More info" -> "Run anyway".
+> 
+> Technical Support & Responsible Disclosure: **`rithvservices@gmail.com`**.
 
 ---
 
@@ -50,14 +49,16 @@ All official builds are published at:
    - Bi-directional file transfer.
    - Remote audio transmission and clipboard synchronization.
    - Portable elevation support to interact with Windows UAC / Administrator prompts.
-5. **Zero-Cost Code Signing**:
-   - Equipped with self-signed Authenticode automation and Microsoft Security Intelligence whitelisting guidance.
+5. **Zero-Cost Trust & Cryptographic Integrity Verification**:
+   - Integrated SHA-256 checksum tracking, Microsoft Defender pre-release scans, and VirusTotal public inspection.
+   - Comprehensive customer verification scripts (`Verify-RVDesk.ps1`).
+   - Detailed guides: [Customer Verification Guide](CUSTOMER_VERIFICATION.md), [Release Guide](RELEASE_GUIDE.md), and [Security Policy](SECURITY_POLICY.md).
 6. **Custom Brand Aesthetic (Crimson Red `#DC2626`)**:
-   - Modern cybersecurity aesthetic with custom crimson red buttons, highlights, and status indicators.
+   - Modern cybersecurity aesthetic with custom crimson red highlights, obsidian slate cards, and clean indicators.
 
 ---
 
-## 🚀 Building & Distributing RVDesk
+## Building & Distributing RVDesk
 
 ### Method 1: Automated Cloud Build via GitHub Actions (Official Release)
 This is the **recommended approach** to build a clean portable binary with custom branding, stripped UAC cards, and controller authorization gates:
@@ -90,10 +91,10 @@ publisher identity (`RithV Services`) and installs under `RVDesk`.
 
 ---
 
-## 🖥️ Daily Usage Instructions
+## Daily Usage Instructions
 
 1. Copy `RVDesk-Portable.exe` (or the extracted `RVDesk.exe`) to both machines (**Host PC** and **Technician/Client PC**).
-2. Launch `RVDesk-Portable.exe` (or `RVDesk-Launcher.bat`) on both computers.
+2. Launch `RVDesk-Portable.exe` on both computers.
 3. **Host PC (Client seeking assistance)**: Provide the **ID** and **One-Time Password** displayed on the left pane.
 4. **Technician PC**:
    - Unlock the controller panel using the **Controller Secret Password**.
@@ -102,7 +103,7 @@ publisher identity (`RithV Services`) and installs under `RVDesk`.
 
 ---
 
-## 🔐 Controller Security & Dynamic Password Management
+## Controller Security & Dynamic Password Management
 
 To ensure your private relay server (`console.danialharith.space`) is protected from unauthorized outgoing sessions:
 
@@ -121,15 +122,13 @@ To ensure your private relay server (`console.danialharith.space`) is protected 
 
 ---
 
-## 📁 Repository Directory Structure
+## Repository Directory Structure
 
 ```
 rvsdesk/
 ├── assets/                          # RVDesk visual branding & icons
 │   ├── rvsdesk.ico                 # Multi-resolution Windows binary icon
 │   ├── rvsdesk_logo_1024.png       # High-resolution master logo
-│   ├── Setup_Trust_RVDesk.bat      # 1-click certificate trust + launch helper
-│   ├── RVDesk-Launcher.bat         # SmartScreen-friendly launcher
 │   └── icon_*.png                  # Multi-size PNG icons (16x16 - 256x256)
 ├── .github/
 │   └── workflows/
@@ -139,27 +138,35 @@ rvsdesk/
 │   ├── RVSDesk.iss                 # Inno Setup project (RVDesk via /D defines)
 │   ├── build_installer.ps1         # Installer build/signing driver
 │   └── VERSION                     # Current release version
+├── releases/                        # Cryptographic release ledger & artifacts
+│   ├── latest.json                 # Machine-readable latest release specifications
+│   ├── history.json                # Immutable historical ledger of releases & hashes
+│   └── v1.9.2/                     # Versioned artifacts (release.json, SHA256SUMS, Verify-RVDesk.ps1)
 ├── scripts/
+│   ├── release_manager.py          # RITHV Trust & Release Manager CLI
 │   ├── apply_branding.py           # Core branding & auth injection script
 │   ├── set_secret_password.py      # Salted SHA-256 password manager CLI
 │   ├── verify_full_build_pipeline.py # Full CI simulation & integrity audit
-│   └── create_self_signed_cert.ps1 # PowerShell self-signed Authenticode signer
+│   └── rcedit-x64.exe              # Windows PE metadata stamper
 ├── server-web/                      # Next.js Server Components
 │   └── app/
+│       ├── downloads/page.tsx      # Official downloads & cryptographic verification portal
+│       ├── api/download/rvsdesk/   # Direct binary download endpoint with hash headers
+│       ├── api/release/latest/     # Release metadata JSON endpoint
 │       ├── rvsdesk-admin/page.tsx  # Web-based password manager dashboard
-│       └── rvsdesk-auth.json/route.ts # Salted hash auth API endpoint
-├── config/
-│   ├── rvsdesk_settings.json       # P2P & rendezvous configurations
-│   └── rvsdesk-auth.json           # Controller secret hash configuration
-├── docs/
-│   ├── server_auth_setup.md        # Hosting setup instructions
-│   └── nextjs_admin_page.md        # Next.js admin page deployment guide
-└── README.md                       # Official documentation
+│       └── rvsdesk-auth.json/      # Salted hash auth API endpoint
+├── tests/
+│   └── test_release_manager.py     # Release manager test suite
+├── Verify-RVDesk.ps1                # Customer 1-click SHA-256 verification tool
+├── CUSTOMER_VERIFICATION.md         # Customer guide for verifying file integrity
+├── RELEASE_GUIDE.md                # Maintainer SOP for releasing new versions
+├── SECURITY_POLICY.md              # Vulnerability reporting & security principles
+└── README.md                       # Master overview
 ```
 
 ---
 
-## ⚖️ License & Attribution (Kredit Lesen Open-Source)
+## License & Attribution
 
 RVDesk by RithV Services is built on the open-source **RustDesk** project by **Purslane Tech Pte. Ltd.** under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 

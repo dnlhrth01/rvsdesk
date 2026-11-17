@@ -232,7 +232,16 @@ def apply_branding(repo_root: str, assets_dir: str):
                 hp_text = f.read()
             
             # Suntik kad panduan rasmi sokongan jarak jauh pelanggan ke dalam buildHelpCards
-            help_card_widget = """Widget buildHelpCards(String updateUrl) {
+            # Dan matikan juga buildInstallCard sepenuhnya
+            start_hc = hp_text.find("  Widget buildHelpCards(String updateUrl) {")
+            end_hc = hp_text.find("  Widget buildInstallCard(", start_hc)
+            end_ic = -1
+            if end_hc != -1:
+                end_ic = hp_text.find("  @override\n  void initState() {", end_hc)
+                if end_ic == -1:
+                    end_ic = hp_text.find("  void initState() {", end_hc)
+
+            clean_cards_block = """  Widget buildHelpCards(String updateUrl) {
     return Container(
       margin: const EdgeInsets.only(top: 10, bottom: 6),
       padding: const EdgeInsets.all(12),
@@ -245,11 +254,11 @@ def apply_branding(repo_root: str, assets_dir: str):
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(Icons.support_agent_rounded, size: 18, color: Color(0xFFDC2626)),
-              SizedBox(width: 8),
+            children: [
+              const Icon(Icons.support_agent_rounded, size: 18, color: Color(0xFFDC2626)),
+              const SizedBox(width: 8),
               Expanded(
-                child: Text(
+                child: const Text(
                   "RITHV SERVICES REMOTE SUPPORT",
                   style: TextStyle(
                     fontSize: 12,
@@ -267,19 +276,22 @@ def apply_branding(repo_root: str, assets_dir: str):
           ),
         ],
       ),
-    );"""
-            hp_text = re.sub(
-                r'Widget buildHelpCards\(String updateUrl\) \{',
-                help_card_widget,
-                hp_text
-            )
-            
-            # Sebagai perlindungan berganda, matikan juga buildInstallCard
-            hp_text = re.sub(
-                r'Widget buildInstallCard\([^)]*\)\s*\{',
-                'Widget buildInstallCard(String title, String content, String btnText, GestureTapCallback onPressed, {double marginTop = 20.0, String? help, String? link, bool? closeButton, String? closeOption}) {\n    return const SizedBox();',
-                hp_text
-            )
+    );
+  }
+
+  Widget buildInstallCard(String title, String content, String btnText,
+      GestureTapCallback onPressed,
+      {double marginTop = 20.0,
+      String? help,
+      String? link,
+      bool? closeButton,
+      String? closeOption}) {
+    return const SizedBox();
+  }
+
+"""
+            if start_hc != -1 and end_hc != -1 and end_ic != -1:
+                hp_text = hp_text[:start_hc] + clean_cards_block + hp_text[end_ic:]
 
             # Pelarasan susun atur panel kiri (Quick Support width & Obsidian background)
             hp_text = hp_text.replace(
