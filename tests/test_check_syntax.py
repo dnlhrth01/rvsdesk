@@ -19,7 +19,7 @@ def check_file(filename):
             j = text.find(q, i+3)
             if j == -1: break
             i = j + 3
-        elif text[i] in ('"', "'"):
+        elif text[i:i+1] in ('"', "'"):
             q = text[i]
             i += 1
             while i < n and text[i] != q:
@@ -43,8 +43,9 @@ def check_file(filename):
     print(f"  Curly:  open={co}, close={cc}, diff={co - cc}")
     print(f"  Round:  open={ro}, close={rc}, diff={ro - rc}")
     print(f"  Square: open={so}, close={sc}, diff={so - sc}")
+    return co == cc and ro == rc and so == sc
 
-print("Checking upstream original:")
-check_file('dist/upstream_desktop_home_page.dart')
-print("\nChecking patched:")
-check_file('dist/patched_desktop_home_page.dart')
+if __name__ == '__main__':
+    import sys
+    fn = sys.argv[1] if len(sys.argv) > 1 else 'test_dialog.dart'
+    check_file(fn)

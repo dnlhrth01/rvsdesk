@@ -719,88 +719,90 @@ del "%~f0"
     showDialog(
       context: context,
       barrierDismissible: !_isDownloadingUpdate.value,
-      builder: (ctx) => Obx(() => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 440,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFDC2626), width: 1),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: const Color(0xFF334155)),
-                ),
-                child: const Text(
-                  "SYSTEM UPDATE • NEW VERSION READY",
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                    color: Color(0xFFF87171),
+      builder: (ctx) => Obx(() => Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: 440,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFDC2626), width: 1),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E293B),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: const Color(0xFF334155)),
+                  ),
+                  child: const Text(
+                    "SYSTEM UPDATE • NEW VERSION READY",
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: Color(0xFFF87171),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "RVDesk v${{_latestVersion.value}} Available",
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "A newer release is available on the repository (Current: v$_rvsCurrentVersion). Update now for the latest stability and security enhancements.",
-                style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF), height: 1.4),
-              ),
-              const SizedBox(height: 16),
-              if (_isDownloadingUpdate.value) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: _downloadProgress.value > 0 ? _downloadProgress.value : null,
-                    minHeight: 8,
-                    backgroundColor: const Color(0xFF020617),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFDC2626)),
-                  ),
+                const SizedBox(height: 12),
+                Text(
+                  "RVDesk v${{_latestVersion.value}} Available",
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _updateStatusText.value,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                  "A newer release is available on the repository (Current: v$_rvsCurrentVersion). Update now for the latest stability and security enhancements.",
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF), height: 1.4),
                 ),
-              ] else ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: const Text("Later", style: TextStyle(color: Color(0xFF9CA3AF))),
+                const SizedBox(height: 16),
+                if (_isDownloadingUpdate.value) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: _downloadProgress.value > 0 ? _downloadProgress.value : null,
+                      minHeight: 8,
+                      backgroundColor: const Color(0xFF020617),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFDC2626)),
                     ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () => _performInAppUpdate(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDC2626),
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _updateStatusText.value,
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                  ),
+                ] else ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text("Later", style: TextStyle(color: Color(0xFF9CA3AF))),
                       ),
-                      child: const Text(
-                        "Update & Restart",
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => _performInAppUpdate(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFDC2626),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text(
+                          "Update & Restart",
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       )),
